@@ -70,6 +70,17 @@ blogRouter.put('/', async (c) => {
     return c.text('updated post');
 })
 
+blogRouter.get('/bulk',async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    const posts = await prisma.post.findMany();
+    return c.json({
+        posts
+    });
+})
+
 blogRouter.get('/:id', async (c) => {
     const id = c.req.param('id');
 
@@ -83,18 +94,11 @@ blogRouter.get('/:id', async (c) => {
                 id: id
             }
         })
+        return c.json({
+            post
+        })
     } catch(e){
         return c.json({error: "Post not found"})
     }
 })
 
-blogRouter.get('/bulk',async (c) => {
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
-
-    const posts = await prisma.post.findMany();
-    return c.json({
-        posts
-    });
-})
