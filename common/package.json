@@ -1,15 +1,21 @@
 {
-  "name": "common",
+  "name": "@lakshayj17/common-app",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Common middlewares and validation schemas for my app",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "Your Name",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "zod": "^3.24.2"
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0"
   }
 }
