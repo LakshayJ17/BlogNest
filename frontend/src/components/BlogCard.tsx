@@ -5,38 +5,34 @@ interface BlogCardProps {
     publishedDate: string;
 }
 export const BlogCard = ({ authorName, title, content, publishedDate }: BlogCardProps) => {
-    return <div>
+    return <div className="p-4 border-b border-slate-200  pb-4">
         <div className="flex">
-            <div className="flex justify-center flex-col">
-                <Avatar name={authorName} />
-            </div>
-
-            <div className="font-normal pl-2">
+            <Avatar name={authorName} />
+            <div className="font-normal pl-2 text-sm flex justify-center flex-col">
                 {authorName}
             </div>
-            <div className="flex justify-center flex-col pl-2">
+            <div className="flex justify-center flex-col pl-2 flex justify-center flex-col">
                 <Circle />
             </div>
-            <div className="pl-2 font-thin font-slate-500">
+            <div className="pl-2 font-thin font-slate-500 text-sm flex justify-center flex-col">
                 {publishedDate}
             </div>
         </div>
-            
-        <div>
+
+        <div className="font-semibold text-xl pt-2">
             {title}
         </div>
-        <div>
+        <div className="text-md font-thin pt-1">
             {content.slice(0, 100) + "..."}
         </div>
-        <div>
-            {`${Math.ceil(content.length / 100)} min read`}
+        <div className="text-slate-400 text-sm font-thin pt-1">
+            {`${Math.ceil(content.length / 100)} min(s) read`}
         </div>
-        <div className="bg-slate-200 h-1 w-full"></div>
     </div>
 
 }
 
-function Circle () { 
+function Circle() {
     return <div className="h-1 w-1 rounded-full bg-slate-400"></div>
 
 }
