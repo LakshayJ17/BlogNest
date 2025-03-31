@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useBlog } from "../hooks"
+import { FullBlog } from "../components/FullBlog"
 
 export const Blog = () => {
     const { id } = useParams()
@@ -12,6 +13,6 @@ export const Blog = () => {
         </div>
     }
     return <div>
-        Blog
+        <FullBlog blog={blog} />
     </div>
 }

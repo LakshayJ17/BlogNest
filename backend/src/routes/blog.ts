@@ -127,11 +127,17 @@ blogRouter.get('/:id', async (c) => {
                 author: {
                     select: {
                         name: true
-                    }   
+                    }
                 }
             }
         })
+        if (!post){
+            c.status(404)
+            return c.json({ error: "Post not found" })
+        }
+        return c.json({post})
     } catch (e) {
+        console.log(e)
         return c.json({ error: "Post not found" })
     }
 })
