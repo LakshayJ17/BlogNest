@@ -43,7 +43,7 @@ export function Circle() {
 
 }
 
-export function Avatar({ name, size = "small" }: { name: string, size: "small" | "big" }) {
+export function Avatar({ name, size = "small" }: { name: string, size?: "small" | "big" }) {
     return <div className={`relative inline-flex justify-center items-center overflow-hidden bg-gray-100 rounded-full bg-gray-600 ${size === "small" ? "w-5 h-5" : "w-10 h-10"} `}>
         <span className={`font-normal text-gray-600 dark:text-gray-200 ${size === "small" ? "text-xs" : "text-md"}`}>{(name.trim())[0].toUpperCase()}</span>
     </div>
