@@ -32,12 +32,13 @@ export const BlogCard = ({ authorName, title, content, publishedDate, id }: Blog
             <div className="text-slate-500 text-sm font-thin pt-1">
                 {`${Math.ceil(content.length / 100)} min(s) read`}
             </div>
-        </div></Link>
+        </div>
+    </Link>
 
 
 }
 
-function Circle() {
+export function Circle() {
     return <div className="h-1 w-1 rounded-full bg-slate-400"></div>
 
 }
