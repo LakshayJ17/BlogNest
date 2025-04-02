@@ -5,6 +5,7 @@ import { Blog } from './pages/Blog'
 import { Blogs } from './pages/Blogs'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Publish } from './pages/Publish'
+import Home from './pages/Home'
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route path='/' element={<Home />} />
           <Route path='/signin' element={<Signin />} />
           <Route path='/signup' element={<Signup />} />
           <Route path='/blog/:id' element={<Blog />} />
