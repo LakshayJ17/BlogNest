@@ -13,13 +13,17 @@ export const Blogs = () => {
                 <BlogSkeleton />
                 <BlogSkeleton />
                 <BlogSkeleton />
+                <BlogSkeleton />
+                <BlogSkeleton />
+                <BlogSkeleton />
             </div>
 
         </div>
     }
+    
     return <div>
         <Appbar />
-        <div className="flex justify-center">
+        <div className="flex justify-center px-10">
             <div>
                 {blogs.map(blog => (
                     <BlogCard
