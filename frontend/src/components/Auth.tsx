@@ -3,6 +3,7 @@ import axios from "axios"
 import { ChangeEvent, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { BACKEND_URL } from "../config"
+import { Spinner } from "./Spinner"
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
@@ -13,9 +14,12 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         password: "",
     })
 
+    const [loading, setLoading] = useState(false)
+
     const navigate = useNavigate();
 
     async function sendRequest() {
+        setLoading(true)
         try {
             // zod will ignore name field in case of signin
             const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs);
@@ -27,6 +31,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         } catch (error) {
             alert("Error while signing up")
             console.log(error)
+        } finally {
+            setLoading(false)
         }
 
     }
@@ -72,7 +78,13 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                             })
                         }} />
                         <button onClick={sendRequest} type="button" className="cursor-pointer mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">
-                            {type === "signup" ? "Sign up" : "Sign In"}
+                            {loading ? (
+                                <div className="flex items-center justify-center">
+                                    <Spinner />
+                                </div>
+                            ) : (
+                                type === "signup" ? "Sign up" : "Sign In"
+                            )}
                         </button>
                     </div>
                 </div>
