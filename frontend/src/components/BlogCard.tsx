@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PostedDate } from "./PostedDate";
 
 interface BlogCardProps {
     authorName: string;
@@ -7,6 +8,7 @@ interface BlogCardProps {
     publishedDate: string;
     id: string;
 }
+
 export const BlogCard = ({ authorName, title, content, publishedDate, id }: BlogCardProps) => {
     return <Link to={`/blog/${id}`}>
         <div className="p-4 border-b border-slate-200 pb-4 cursor-pointer hover:shadow-md hover:bg-slate-50 transition duration-200 ease-in-out">
@@ -19,7 +21,7 @@ export const BlogCard = ({ authorName, title, content, publishedDate, id }: Blog
                     <Circle />
                 </div>
                 <div className="pl-2 font-thin font-slate-500 text-sm flex justify-center flex-col">
-                    {publishedDate}
+                    <PostedDate date={publishedDate} />
                 </div>
             </div>
 
