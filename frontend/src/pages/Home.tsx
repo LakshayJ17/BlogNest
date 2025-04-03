@@ -20,7 +20,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
-          <div className="text-xl font-bold">Blogvault</div>
+          <div className="text-xl font-bold">BlogVault</div>
 
           <nav className="hidden md:flex items-center gap-6">
             <Link to="#" className="text-sm font-medium text-slate-600 hover:text-slate-900">
@@ -62,7 +62,7 @@ export default function Home() {
                   </h1>
                   <p className="max-w-[600px] text-slate-500 md:text-xl">
                     Read and share ideas from independent voices, world-class publications, and experts from around the
-                    globe. Anyone can publish on Blogvault.
+                    globe. Anyone can publish on BlogVault.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -95,7 +95,7 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why Blogvault?</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why BlogVault?</h2>
                 <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   A platform that puts your ideas first. No distractions, just pure content.
                 </p>
@@ -143,7 +143,7 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Trending on Blogvault</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Trending on BlogVault</h2>
                 <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Discover stories, thinking, and expertise from writers on any topic.
                 </p>
@@ -191,7 +191,7 @@ export default function Home() {
   <div className="container mx-auto max-w-6xl px-4">
     <div className="flex flex-col items-center justify-center space-y-4 text-center">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on Blogvault</h2>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogVault</h2>
         <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed">
           Explore top stories, expert insights, and trending topics across multiple domains.
         </p>
@@ -261,7 +261,7 @@ export default function Home() {
                 <div className="space-y-2">
                   <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Start your writing journey today</h2>
                   <p className="max-w-[600px] text-slate-500 md:text-xl/relaxed">
-                    Join thousands of writers who have already found their voice on Blogvault. It's free to start.
+                    Join thousands of writers who have already found their voice on BlogVault. It's free to start.
                   </p>
                 </div>
               </div>
