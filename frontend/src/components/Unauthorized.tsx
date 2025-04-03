@@ -18,11 +18,8 @@ export const Unauthorized = () => {
     useEffect(() => {
         if (!token) {
             setExcuse(funnyExcuses[Math.floor(Math.random() * funnyExcuses.length)]);
-            
-        } else {
-            navigate("/publish"); 
-        }
-    }, []);
+        } 
+    }, [token]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center p-6">

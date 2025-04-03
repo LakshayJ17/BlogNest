@@ -16,7 +16,6 @@ export const Publish = () => {
     }
 
     return (
-
         <div>
             <Appbar />
             <div className="flex justify-center w-full pt-8">

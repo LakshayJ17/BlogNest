@@ -16,7 +16,6 @@ export const Blogs = () => {
                 <BlogSkeleton />
                 <BlogSkeleton />
             </div>
-
         </div>
     }
     
