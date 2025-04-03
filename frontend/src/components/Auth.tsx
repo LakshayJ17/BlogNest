@@ -20,7 +20,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             // zod will ignore name field in case of signin
             const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs);
             console.log(response.data)
-            const jwt  = response.data;
+            const jwt = response.data;
             localStorage.setItem("token", jwt);
             navigate("/blogs")
 
@@ -53,7 +53,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                             setPostInputs({
                                 ...postInputs,
                                 name: e.target.value
-                            })
+                            });
+                            localStorage.setItem("name", e.target.value);
                         }} /> : null}
 
                         <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {
@@ -70,7 +71,9 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 password: e.target.value
                             })
                         }} />
-                        <button onClick={sendRequest} type="button" className="mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">{type === "signup" ? "Sign up" : "Sign In"}</button>
+                        <button onClick={sendRequest} type="button" className="cursor-pointer mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">
+                            {type === "signup" ? "Sign up" : "Sign In"}
+                        </button>
                     </div>
                 </div>
             </div>
