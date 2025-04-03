@@ -9,7 +9,7 @@ interface BlogCardProps {
 }
 export const BlogCard = ({ authorName, title, content, publishedDate, id }: BlogCardProps) => {
     return <Link to={`/blog/${id}`}>
-        <div className="border-b border-slate-200 pb-4 w-screen max-w-screen-md cursor-pointer hover:shadow-md hover:bg-slate-50 transition duration-200 ease-in-out">
+        <div className="p-4 border-b border-slate-200 pb-4 cursor-pointer hover:shadow-md hover:bg-slate-50 transition duration-200 ease-in-out">
             <div className="flex">
                 <Avatar name={authorName} />
                 <div className="font-normal pl-2 text-sm flex justify-center flex-col">
@@ -26,7 +26,7 @@ export const BlogCard = ({ authorName, title, content, publishedDate, id }: Blog
             <div className="font-semibold text-xl pt-2">
                 {title}
             </div>
-            <div className="text-md font-thin pt-1">
+            <div className="text-md font-thin pt-1 overflow-hidden text-ellipsis whitespace-nowrap">
                 {content.slice(0, 100) + "..."}
             </div>
             <div className="text-slate-500 text-sm font-thin pt-1">
