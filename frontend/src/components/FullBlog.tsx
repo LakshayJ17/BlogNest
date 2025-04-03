@@ -1,14 +1,17 @@
 import { Blog } from "../hooks";
 import { Appbar } from "./Appbar";
+import { BackButton } from "./BackButton";
 import { Avatar } from "./BlogCard";
 
 export const FullBlog = ({ blog }: { blog: Blog }) => {
     return (
-        <div>
+        <div >
             <Appbar />
+            <div className="flex justify-start pt-6 pl-3 lg:pl-50">
+                <BackButton />
+            </div>
             <div className="flex justify-center px-4 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-5xl">
-                    {/* Blog Content */}
                     <div className="lg:col-span-8">
                         <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold">
                             {blog.title}
@@ -21,7 +24,6 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                         </div>
                     </div>
 
-                    {/* Author Section */}
                     <div className="lg:col-span-4">
                         <div className="text-slate-600 text-lg sm:text-xl">
                             Author
