@@ -42,7 +42,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             <div className="flex justify-center">
                 <div>
                     <div className="px-10">
-                        <div className="text-5xl font-bold">
+                        <div className="text-3xl sm:text-5xl font-bold">
                             {type === "signup" ? "Create an account" : "Welcome back  "}
                         </div>
                         <div className="text-slate-600 text-center">
@@ -77,10 +77,10 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 password: e.target.value
                             })
                         }} />
-                        <button onClick={sendRequest} type="button" className="cursor-pointer mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">
+                        <button onClick={sendRequest} type="button" className="cursor-pointer mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-4 me-2 mb-2">
                             {loading ? (
                                 <div className="flex items-center justify-center">
-                                    <Spinner />
+                                    <Spinner size="small" />
                                 </div>
                             ) : (
                                 type === "signup" ? "Sign up" : "Sign In"
@@ -107,7 +107,7 @@ function LabeledInput({ label, placeholder, onChange, type }: LabeledInputType) 
         <input
             onChange={onChange}
             type={type || "text"}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5"
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-3"
             placeholder={placeholder}
             required
         />
