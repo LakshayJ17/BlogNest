@@ -3,13 +3,20 @@ import { Appbar } from "../components/Appbar";
 import { BACKEND_URL } from "../config";
 import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { Unauthorized } from "../components/Unauthorized";
 
 export const Publish = () => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const navigate = useNavigate()
     const token = localStorage.getItem("token")
+
+    if (!token) {
+        return <Unauthorized />
+    }
+
     return (
+
         <div>
             <Appbar />
             <div className="flex justify-center w-full pt-8">
@@ -45,6 +52,7 @@ export const Publish = () => {
         </div>
     );
 };
+
 function TextEditor({ onChange }: { onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void }) {
     return (
         <>

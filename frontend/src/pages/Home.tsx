@@ -1,9 +1,17 @@
 import { Edit, TrendingUp, Users, ChevronRight } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
-
+import heroimage from "../assets/heroimage.png"
 
 export default function Home() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  function handleSignin() {
+    navigate("/signin")
+  }
+
+  function handleSignup() {
+    navigate("/signup")
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -32,7 +40,7 @@ export default function Home() {
             </Link>
             <button
               type="button"
-              onClick={() => navigate("/signup")}
+              onClick={handleSignup}
               className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
             >
               Get Started
@@ -57,13 +65,15 @@ export default function Home() {
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <button
                     type="button"
-                    className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+                    onClick={handleSignup}
+                    className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Start writing
                   </button>
                   <button
                     type="button"
-                    className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+                    onClick={handleSignin}
+                    className="cursor-pointer text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Explore articles
                   </button>
@@ -71,7 +81,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-center">
                 <div className="h-[350px] w-full max-w-[550px] rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
-                  Hero Image Placeholder
+                  <img src={heroimage} alt="" />
                 </div>
               </div>
             </div>
@@ -139,9 +149,9 @@ export default function Home() {
             <div className="mx-auto grid max-w-5xl gap-8 py-12 md:grid-cols-2">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="group flex flex-col space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="rounded-full overflow-hidden h-10 w-10 border bg-slate-100 flex items-center justify-center text-xs text-slate-500">
-                      A{i}
+                  <div className="flex justify-center items-start gap-6">
+                    <div className="rounded-full h-8 w-8 border bg-slate-100 flex items-center justify-center text-sm text-slate-500">
+                      U{i}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold group-hover:underline">
@@ -184,21 +194,6 @@ export default function Home() {
                   <p className="max-w-[600px] text-slate-500 md:text-xl/relaxed">
                     Join thousands of writers who have already found their voice on Blogvault. It's free to start.
                   </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/signup")}
-                    className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
-                  >
-                    Create account
-                  </button>
-                  <button
-                    type="button"
-                    className="cursor-pointer text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
-                  >
-                    Learn More
-                  </button>
                 </div>
               </div>
               <div className="flex items-center justify-center">
@@ -243,7 +238,7 @@ export default function Home() {
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <button
                   type="button"
-                  onClick={() => navigate("/signup")}
+                  onClick={handleSignup}
                   className="cursor-pointer bg-white text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
                 >
                   Get started
