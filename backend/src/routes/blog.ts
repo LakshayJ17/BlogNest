@@ -48,7 +48,7 @@ blogRouter.post('/', async (c) => {
         data: {
             title: body.title,
             content: body.content,
-            authorId: userId
+            authorId: userId,
         }
     });
 
@@ -95,6 +95,7 @@ blogRouter.get('/bulk', async (c) => {
             content: true,
             title: true,
             id: true,
+            date: true,
             author: {
                 select: {
                     name: true
@@ -124,6 +125,7 @@ blogRouter.get('/:id', async (c) => {
                 id: true,
                 title: true,
                 content: true,
+                date: true,
                 author: {
                     select: {
                         name: true

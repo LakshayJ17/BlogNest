@@ -2,8 +2,12 @@ import { Blog } from "../hooks";
 import { Appbar } from "./Appbar";
 import { BackButton } from "./BackButton";
 import { Avatar } from "./BlogCard";
+import { PostedDate } from "./PostedDate";
+
 
 export const FullBlog = ({ blog }: { blog: Blog }) => {
+    console.log("Blog Date:", blog.date);
+
     return (
         <div >
             <Appbar />
@@ -17,7 +21,9 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                             {blog.title}
                         </div>
                         <div className="text-slate-500 pt-3 sm:pt-5 text-sm sm:text-base">
-                            Posted on 2nd Dec 2023
+                            
+                        Posted on <PostedDate date={blog.date} />
+                            
                         </div>
                         <div className="pt-4 text-base sm:text-lg leading-relaxed">
                             {blog.content}
