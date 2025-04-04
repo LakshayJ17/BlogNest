@@ -41,8 +41,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         <div className="h-screen flex justify-center flex-col">
             <div className="flex justify-center">
                 <div>
-                    <div className="px-10">
-                        <div className="text-3xl sm:text-5xl font-bold">
+                    <div className="px-8">
+                        <div className="text-center text-3xl sm:text-5xl font-bold">
                             {type === "signup" ? "Create an account" : "Welcome back  "}
                         </div>
                         <div className="text-slate-600 text-center">
@@ -55,7 +55,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
                     <div className="py-5 space-y-5">
                         {type === "signup" ? <LabeledInput label="Name" placeholder="Enter your name" onChange={(e) => {
-                            // When the input changes, update the state with the new value
                             setPostInputs({
                                 ...postInputs,
                                 name: e.target.value
@@ -64,14 +63,12 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                         }} /> : null}
 
                         <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {
-                            // When the input changes, update the state with the new value
                             setPostInputs({
                                 ...postInputs,
                                 email: e.target.value
                             })
                         }} />
                         <LabeledInput label="Password" type={"password"} placeholder="Enter password" onChange={(e) => {
-                            // When the input changes, update the state with the new value
                             setPostInputs({
                                 ...postInputs,
                                 password: e.target.value
@@ -103,7 +100,7 @@ interface LabeledInputType {
 
 function LabeledInput({ label, placeholder, onChange, type }: LabeledInputType) {
     return <div>
-        <label className="block mb-2 text-sm font-semibold text-black ">{label}</label>
+        <label className="block mb-2 text-sm font-semibold text-black">{label}</label>
         <input
             onChange={onChange}
             type={type || "text"}

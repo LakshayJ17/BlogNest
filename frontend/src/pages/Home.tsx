@@ -20,7 +20,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
-          <div className="text-xl font-bold">BlogVault</div>
+          <div className="text-xl font-bold">BlogNest</div>
 
           <nav className="hidden md:flex items-center gap-6">
             <Link to="#" className="text-sm font-medium text-slate-600 hover:text-slate-900">
@@ -62,7 +62,7 @@ export default function Home() {
                   </h1>
                   <p className="max-w-[600px] text-slate-500 md:text-xl">
                     Read and share ideas from independent voices, world-class publications, and experts from around the
-                    globe. Anyone can publish on BlogVault.
+                    globe. Anyone can publish on BlogNest.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -95,7 +95,7 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why BlogVault?</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why BlogNest?</h2>
                 <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   A platform that puts your ideas first. No distractions, just pure content.
                 </p>
@@ -143,7 +143,7 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Trending on BlogVault</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Trending on BlogNest</h2>
                 <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Discover stories, thinking, and expertise from writers on any topic.
                 </p>
@@ -191,7 +191,7 @@ export default function Home() {
   <div className="container mx-auto max-w-6xl px-4">
     <div className="flex flex-col items-center justify-center space-y-4 text-center">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogVault</h2>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogNest</h2>
         <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed">
           Explore top stories, expert insights, and trending topics across multiple domains.
         </p>
@@ -261,7 +261,7 @@ export default function Home() {
                 <div className="space-y-2">
                   <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Start your writing journey today</h2>
                   <p className="max-w-[600px] text-slate-500 md:text-xl/relaxed">
-                    Join thousands of writers who have already found their voice on BlogVault. It's free to start.
+                    Join thousands of writers who have already found their voice on BlogNest. It's free to start.
                   </p>
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function Home() {
       <footer className="w-full border-t bg-white py-6">
         <div className="container mx-auto max-w-6xl flex flex-col items-center justify-between gap-4 md:flex-row px-4">
           <div className="flex items-center">
-            <span className="text-lg font-bold">BlogVault</span>
+            <span className="text-lg font-bold">BlogNest</span>
           </div>
           <nav className="flex gap-4 sm:gap-6">
             <Link to="#" className="cursor-pointer text-xs hover:underline underline-offset-4">
@@ -340,7 +340,7 @@ export default function Home() {
             </Link>
           </nav>
           <div className="flex items-center">
-            <p className="text-xs text-slate-500">© {new Date().getFullYear()} BlogVault. All rights reserved.</p>
+            <p className="text-xs text-slate-500">© {new Date().getFullYear()} BlogNest. All rights reserved.</p>
           </div>
         </div>
       </footer>

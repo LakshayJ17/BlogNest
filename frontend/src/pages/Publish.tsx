@@ -5,6 +5,7 @@ import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Unauthorized } from "../components/Unauthorized";
 import { Spinner } from "../components/Spinner";
+import { BackButton } from "../components/BackButton";
 
 export const Publish = () => {
     const [title, setTitle] = useState("");
@@ -23,7 +24,7 @@ export const Publish = () => {
             return;
         }
 
-        setLoading(true); 
+        setLoading(true);
         try {
             const response = await axios.post(
                 `${BACKEND_URL}/api/v1/blog`,
@@ -39,34 +40,41 @@ export const Publish = () => {
             console.error("Error publishing the blog:", error);
             alert("An error occurred while publishing the blog.");
         } finally {
-            setLoading(false); 
+            setLoading(false);
         }
     };
 
     return (
         <div>
             <Appbar />
-            <div className="flex justify-center px-2 sm:w-full pt-8">
-                <div className="max-w-screen-lg w-full space-y-6">
-                    <input
-                        onChange={(e) => setTitle(e.target.value)}
-                        type="text"
-                        className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-md font-medium rounded-md focus:ring-blue-500 focus:border-blue-500 block pl-3 py-2 shadow-sm"
-                        placeholder="Enter the title of your article..."
-                        required
-                    />
+            <div>
+                <div className="flex pt-6 pl-3 lg:pl-85">
+                    <BackButton />
+                </div>
+                <div className="flex justify-center px-2 sm:w-full pt-8">
 
-                    <TextEditor onChange={(e) => setContent(e.target.value)} />
-                    <button
-                        type="button"
-                        className="cursor-pointer min-w-[150px] inline-flex items-center justify-center px-6 py-2 text-base font-semibold text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
-                        onClick={handlePublish}
-                        disabled={loading} 
-                    >
-                        {loading ? <Spinner size="small" /> : "Publish Article"}
-                    </button>
+                    <div className="max-w-screen-lg w-full space-y-6">
+                        <input
+                            onChange={(e) => setTitle(e.target.value)}
+                            type="text"
+                            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-md font-medium rounded-md focus:ring-blue-500 focus:border-blue-500 block pl-3 py-2 shadow-sm"
+                            placeholder="Enter the title of your article..."
+                            required
+                        />
+
+                        <TextEditor onChange={(e) => setContent(e.target.value)} />
+                        <button
+                            type="button"
+                            className="cursor-pointer min-w-[150px] inline-flex items-center justify-center px-6 py-2 text-base font-semibold text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                            onClick={handlePublish}
+                            disabled={loading}
+                        >
+                            {loading ? <Spinner size="small" /> : "Publish Article"}
+                        </button>
+                    </div>
                 </div>
             </div>
+
         </div>
     );
 };
