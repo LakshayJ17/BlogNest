@@ -19,6 +19,7 @@ model User {
   name     String?
   password String
   posts    Post[]
+  likes   Like[]
 }
 
 model Post {
@@ -29,4 +30,17 @@ model Post {
   date      DateTime @default(now())
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
+  likes     Like[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId]) // Ensure a user can only like a post once
 }

@@ -100,7 +100,12 @@ blogRouter.get('/bulk', async (c) => {
                 select: {
                     name: true
                 }
-            }
+            },
+            _count: {
+                select: {
+                    likes: true, 
+                },
+            },
         }
     });
 
@@ -130,17 +135,115 @@ blogRouter.get('/:id', async (c) => {
                     select: {
                         name: true
                     }
-                }
+                },
+                _count: {
+                    select: {
+                        likes: true, 
+                    },
+                },
             }
         })
-        if (!post){
+        if (!post) {
             c.status(404)
             return c.json({ error: "Post not found" })
         }
-        return c.json({post})
+        return c.json({ post })
     } catch (e) {
         console.log(e)
         return c.json({ error: "Post not found" })
     }
 })
+
+// Like / unlike the post
+blogRouter.post('/:id/like', async (c) => {
+    const userId = c.get('userId')
+    const postId = c.req.param('id')
+
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        const existing = await prisma.like.findUnique({
+            where: {
+                userId_postId: {
+                    userId: userId,
+                    postId: postId
+                }
+            }
+        })
+
+        if (existing) {
+            await prisma.like.delete({
+                where: {
+                    userId_postId: {
+                        userId: userId,
+                        postId: postId
+                    }
+                }
+            })
+            return c.json({ liked: false })
+        } else {
+            await prisma.like.create({
+                data: {
+                    userId: userId,
+                    postId: postId
+                }
+            })
+            return c.json({ liked: true })
+        }
+    } catch (e) {
+        console.error("Error toggling like:", e);
+        c.status(500);
+        return c.json({ error: "Could not toggle like" });
+    }
+})
+
+// Get likes count
+blogRouter.get('/:id/likes', async (c) => {
+    const postId = c.req.param('id');
+
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        const count = await prisma.like.count({
+            where: { postId }
+        });
+        return c.json({ count });
+    } catch (e) {
+        console.error("Error fetching like count:", e);
+        c.status(500);
+        return c.json({ error: "Could not fetch like count" });
+    }
+});
+
+blogRouter.get('/:id/liked', async (c) => {
+    const userId = c.get('userId');
+    const postId = c.req.param('id');
+
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        const liked = await prisma.like.findUnique({
+            where: {
+                userId_postId: {
+                    userId,
+                    postId
+                }
+            }
+        });
+
+        return c.json({ liked: !!liked });
+    } catch (e) {
+        console.error("Error checking like:", e);
+        c.status(500);
+        return c.json({ error: "Could not check like status" });
+    }
+});
+
+
 

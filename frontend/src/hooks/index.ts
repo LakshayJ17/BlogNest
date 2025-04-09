@@ -9,7 +9,10 @@ export interface Blog {
     "date": string;
     "author": {
         "name": string;
-    }
+    };
+    "_count": {
+        "likes": number;
+    };
 
 }
 

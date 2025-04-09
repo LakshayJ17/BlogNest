@@ -7,9 +7,10 @@ interface BlogCardProps {
     content: string;
     publishedDate: string;
     id: string;
+    likes: number;
 }
 
-export const BlogCard = ({ authorName, title, content, publishedDate, id }: BlogCardProps) => {
+export const BlogCard = ({ authorName, title, content, publishedDate, id, likes }: BlogCardProps) => {
     return <Link to={`/blog/${id}`}>
         <div className="p-4 border-b border-slate-200 pb-4 cursor-pointer hover:shadow-md hover:bg-slate-50 transition duration-200 ease-in-out">
             <div className="flex">
@@ -33,6 +34,10 @@ export const BlogCard = ({ authorName, title, content, publishedDate, id }: Blog
             </div>
             <div className="text-slate-500 text-sm font-thin pt-1">
                 {`${Math.ceil(content.split(" ").length / 200)} min(s) read`}
+            </div>
+
+            <div className="text-slate-500 text-sm font-thin pt-1">
+                ❤️ {likes} {likes === 1 ? "like" : "likes"}
             </div>
         </div>
     </Link>
