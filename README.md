@@ -1,8 +1,8 @@
-# BlogVault  
+# BlogNest  
 
-🚀 **BlogVault** is a modern, high-performance blogging platform where users can read, write, and share insightful articles. Built with cutting-edge web technologies, it ensures a smooth and engaging experience.  
+🚀 **BlogNest** is a modern, high-performance blogging platform where users can read, write, and share insightful articles. Built with cutting-edge web technologies, it ensures a smooth and engaging experience.
 
-🌐 **Live URL**: [BlogVault](https://blogvault-project.vercel.app/)  
+🌐 **Live URL**: [BlogNest](https://blognest-project.vercel.app/)  
 
 ---
 
@@ -25,9 +25,7 @@
 
 ## 📌 **Features**  
 ✔️ User authentication and profile management  
-✔️ Create and share blog posts
-✔️ Read posts from all users
+✔️ Create and share blog posts  
+✔️ Read posts from all users  
 ✔️ Responsive and modern UI  
 ✔️ High-speed performance with Cloudflare  
-
-
