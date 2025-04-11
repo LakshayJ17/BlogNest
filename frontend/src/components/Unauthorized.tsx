@@ -13,7 +13,7 @@ export const Unauthorized = () => {
         "🔥 This page is on fire. (Metaphorically.)",
         "🔒 Firewall says you're too cool for this page.",
         "🕵️‍♂️ We see you sneaking in. Nice try."
-    ];
+    ]; 
 
     useEffect(() => {
         if (!token) {

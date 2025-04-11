@@ -4,6 +4,7 @@ import { ChangeEvent, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { BACKEND_URL } from "../config"
 import { Spinner } from "./Spinner"
+import { useAuthStore } from "../store/auth"
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
@@ -18,14 +19,23 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
     const navigate = useNavigate();
 
+    const setToken = useAuthStore((state) => state.setToken)
+    const setName = useAuthStore((state) => state.setName)
+
     async function sendRequest() {
         setLoading(true)
         try {
             // zod will ignore name field in case of signin
             const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs);
-            console.log(response.data)
+            // console.log(response.data)
+
             const jwt = response.data;
-            localStorage.setItem("token", jwt);
+            setToken(jwt)
+            if (type === "signup" && postInputs.name) {
+                setName(postInputs.name);
+            }
+
+            // localStorage.setItem("token", jwt);
             navigate("/blogs")
 
         } catch (error) {
@@ -59,7 +69,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 ...postInputs,
                                 name: e.target.value
                             });
-                            localStorage.setItem("name", e.target.value);
+                            // localStorage.setItem("name", e.target.value);
                         }} /> : null}
 
                         <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {

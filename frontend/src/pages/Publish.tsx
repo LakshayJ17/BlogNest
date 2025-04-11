@@ -6,13 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { Unauthorized } from "../components/Unauthorized";
 import { Spinner } from "../components/Spinner";
 import { BackButton } from "../components/BackButton";
+import { useAuthStore } from "../store/auth";
 
 export const Publish = () => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const token = localStorage.getItem("token");
+    // const token = localStorage.getItem("token");
+
+    const token = useAuthStore((state) => state.token)
 
     if (!token) {
         return <Unauthorized />;

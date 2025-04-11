@@ -14,7 +14,7 @@ export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
     e.stopPropagation();
     setPopping(true);
     onClick();
-    setTimeout(() => setPopping(false), 200); // Match animation duration
+    setTimeout(() => setPopping(false), 200); 
   };
 
   return (

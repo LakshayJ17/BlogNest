@@ -200,24 +200,24 @@ blogRouter.post('/:id/like', async (c) => {
 })
 
 // Get likes count
-blogRouter.get('/:id/likes', async (c) => {
-    const postId = c.req.param('id');
+// blogRouter.get('/:id/likes', async (c) => {
+//     const postId = c.req.param('id');
 
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+//     const prisma = new PrismaClient({
+//         datasourceUrl: c.env?.DATABASE_URL,
+//     }).$extends(withAccelerate());
 
-    try {
-        const count = await prisma.like.count({
-            where: { postId }
-        });
-        return c.json({ count });
-    } catch (e) {
-        console.error("Error fetching like count:", e);
-        c.status(500);
-        return c.json({ error: "Could not fetch like count" });
-    }
-});
+//     try {
+//         const count = await prisma.like.count({
+//             where: { postId }
+//         });
+//         return c.json({ count });
+//     } catch (e) {
+//         console.error("Error fetching like count:", e);
+//         c.status(500);
+//         return c.json({ error: "Could not fetch like count" });
+//     }
+// });
 
 blogRouter.get('/:id/liked', async (c) => {
     const userId = c.get('userId');
