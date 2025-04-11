@@ -29,12 +29,11 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs);
             // console.log(response.data)
 
-            const jwt = response.data;
-            setToken(jwt)
-            if (type === "signup" && postInputs.name) {
-                console.log(postInputs.name)
-                setName(postInputs.name);
-            }
+            const { jwt, name } = response.data;
+            setToken(jwt);
+            console.log(name)
+            setName(name);
+
 
             // localStorage.setItem("token", jwt);
             navigate("/blogs")
@@ -71,7 +70,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 name: e.target.value
                             });
                             // localStorage.setItem("name", e.target.value);
-                            setName(e.target.value);
                         }} /> : null}
 
                         <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {
