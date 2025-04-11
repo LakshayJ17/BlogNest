@@ -1,58 +1,65 @@
 import { Link } from "react-router-dom";
 import { PostedDate } from "./PostedDate";
+import { useLike } from "../hooks/useLike";
+import { LikeButton } from "./LikeButton";
 
 interface BlogCardProps {
+    id: string;
     authorName: string;
-    title: string,
+    title: string;
     content: string;
     publishedDate: string;
-    id: string;
-    likes: number;
+    _count: {
+        likes: number;
+    };
 }
 
-export const BlogCard = ({ authorName, title, content, publishedDate, id, likes }: BlogCardProps) => {
-    return <Link to={`/blog/${id}`}>
-        <div className="p-4 border-b border-slate-200 pb-4 cursor-pointer hover:shadow-md hover:bg-slate-50 transition duration-200 ease-in-out">
-            <div className="flex">
+export const BlogCard = ({ authorName, title, content, publishedDate, id, _count }: BlogCardProps) => {
+    const { liked, likes, toggleLike } = useLike(id, _count.likes);
+    const minutes = Math.ceil(content.split(" ").length / 200);
+
+    return (
+        <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200">
+            <div className="flex items-center text-xs text-slate-500 mb-2">
                 <Avatar name={authorName} />
-                <div className="font-normal pl-2 text-sm flex justify-center flex-col">
-                    {authorName}
-                </div>
-                <div className="flex justify-center flex-col pl-2">
-                    <Circle />
-                </div>
-                <div className="pl-2 font-thin font-slate-500 text-sm flex justify-center flex-col">
-                    <PostedDate date={publishedDate} />
-                </div>
+                <span className="ml-2">{authorName}</span>
+                <div className="mx-2 h-1 w-1 bg-slate-400 rounded-full" />
+                <PostedDate date={publishedDate} />
             </div>
 
-            <div className="font-semibold text-xl pt-2">
-                {title}
-            </div>
-            <div className="text-md font-thin pt-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                {content.slice(0, 100) + "..."}
-            </div>
-            <div className="text-slate-500 text-sm font-thin pt-1">
-                {`${Math.ceil(content.split(" ").length / 200)} min(s) read`}
-            </div>
+            <Link to={`/blog/${id}`}>
+                <div className="space-y-2">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
+                        {title}
+                    </h2>
+                    <p className="text-sm text-slate-600 leading-snug line-clamp-2">
+                        {content}
+                    </p>
 
-            <div className="text-slate-500 text-sm font-thin pt-1">
-                ❤️ {likes} {likes === 1 ? "like" : "likes"}
+                    <p className="text-xs text-slate-400 pt-1">
+                        {minutes} {minutes > 1 ? "mins read" : "min read"}
+                    </p>
+
+                </div>
+            </Link>
+
+            <div className="mt-4">
+                <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
             </div>
         </div>
-    </Link>
+    );
+};
 
+export function Avatar({ name, size = "small" }: { name: string; size?: "small" | "big" }) {
+    const sizeClasses = size === "small" ? "w-6 h-6 text-sm" : "w-10 h-10 text-lg";
 
-}
-
-export function Circle() {
-    return <div className="h-1 w-1 rounded-full bg-slate-400"></div>
-
-}
-
-export function Avatar({ name, size = "small" }: { name: string, size?: "small" | "big" }) {
-    return <div className={`relative inline-flex justify-center items-center overflow-hidden bg-gray-600 rounded-full ${size === "small" ? "w-5 h-5" : "w-10 h-10"} `}>
-        <span className={`font-normal text-gray-600 dark:text-gray-200 ${size === "small" ? "text-xs" : "text-md"}`}>{(name.trim())[0].toUpperCase()}</span>
-    </div>
+    return (
+        <div
+            className={`inline-flex items-center justify-center rounded-full bg-gray-800 text-white font-semibold ${sizeClasses}`}
+            style={{ lineHeight: 1 }}
+        >
+            {name.trim()[0].toUpperCase()}
+        </div>
+    );
 }
 
