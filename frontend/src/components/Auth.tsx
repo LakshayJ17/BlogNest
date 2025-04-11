@@ -70,6 +70,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 name: e.target.value
                             });
                             // localStorage.setItem("name", e.target.value);
+                            setName(e.target.value);
                         }} /> : null}
 
                         <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {

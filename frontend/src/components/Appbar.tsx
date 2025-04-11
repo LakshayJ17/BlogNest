@@ -4,8 +4,8 @@ import { useAuthStore } from "../store/auth"
 
 export const Appbar = () => {
     // const name = localStorage.getItem("name") || "Anonymous"
-    const name = useAuthStore((state) => state.name || "Anonymous")
-
+    const name = useAuthStore((state) => state.name ) || "Anonymous"
+    
     return <div className="w-full border-b flex justify-between items-center px-5 sm:px-10 py-4 ">
         <Link to={"/"}>
             <div className="flex flex-col justify-center text-xl cursor-pointer ">BlogNest</div>
