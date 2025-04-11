@@ -32,6 +32,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             const jwt = response.data;
             setToken(jwt)
             if (type === "signup" && postInputs.name) {
+                console.log(postInputs.name)
                 setName(postInputs.name);
             }
 
