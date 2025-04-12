@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../config"
 import { Spinner } from "./Spinner"
 import { useAuthStore } from "../store/auth"
 import { ToastContainer, toast } from 'react-toastify';
+import { Eye, EyeOff } from "lucide-react";
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
@@ -42,9 +43,9 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             navigate("/blogs")
 
         } catch (error) {
-            
+
             notify()
-            
+
             console.log(error)
         } finally {
             setLoading(false)
@@ -98,7 +99,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 type === "signup" ? "Sign up" : "Sign In"
                             )}
                         </button>
-                        <ToastContainer />
+                        <ToastContainer className="!mt-4 sm:!mt-0 !px-4 sm:!px-0" />
                     </div>
                 </div>
             </div>
@@ -115,14 +116,29 @@ interface LabeledInputType {
 }
 
 function LabeledInput({ label, placeholder, onChange, type }: LabeledInputType) {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPasswordField = type === "password";
+
     return <div>
         <label className="block mb-2 text-sm font-semibold text-black">{label}</label>
-        <input
-            onChange={onChange}
-            type={type || "text"}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-3"
-            placeholder={placeholder}
-            required
-        />
+        <div className="relative">
+            <input
+                onChange={onChange}
+                type={isPasswordField && !showPassword ? "password" : "text"}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-3"
+                placeholder={placeholder}
+                required
+            />
+            {isPasswordField && (
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-600 hover:text-black focus:outline-none"
+                >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+            )}
+        </div>
+
     </div>
 }
