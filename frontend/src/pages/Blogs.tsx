@@ -20,7 +20,7 @@ export const Blogs = () => {
 
     return (
         <div className="min-h-screen overflow-x-hidden">
-            <Appbar />
+            <Appbar navigateTo="/" label="BlogNest" />
             <div className="flex justify-center px-4 md:px-10 py-6">
                 <div className="w-full max-w-screen-md flex flex-col gap-6">
                     {blogs.map((blog) => (

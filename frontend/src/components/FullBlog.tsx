@@ -13,10 +13,7 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
 
     return (
         <div >
-            <Appbar />
-            <div className="flex justify-start pt-6 pl-3 lg:pl-50">
-                <BackButton />
-            </div>
+            <Appbar navigateTo="/blogs" label={<BackButton />} />
             <div className="flex justify-center px-4 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-5xl">
                     <div className="lg:col-span-8">

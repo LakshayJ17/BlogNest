@@ -53,11 +53,8 @@ export const Publish = () => {
 
     return (
         <div>
-            <Appbar />
+            <Appbar navigateTo="/blogs" label={<BackButton />} />
             <div>
-                <div className="flex pt-6 pl-3 lg:pl-85">
-                    <BackButton />
-                </div>
                 <div className="flex justify-center px-2 sm:w-full pt-8">
 
                     <div className="max-w-screen-lg w-full space-y-6">

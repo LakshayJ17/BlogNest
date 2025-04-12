@@ -5,10 +5,10 @@ export const BackButton = () => {
     return (
         <button
             onClick={() => navigate('/blogs')}
-            className="h-8 w-8 rounded-full flex justify-center items-center bg-slate-500 hover:bg-gray-700 transition duration-200 ease-in-out cursor-pointer"
+            className="flex justify-center items-center hover:text-gray-700 transition duration-200 ease-in-out cursor-pointer"
         >
             <svg
-                className="w-4 h-4 text-white"
+                className="w-6 h-6 text-slate-500"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
