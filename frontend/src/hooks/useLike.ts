@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { BACKEND_URL } from "../config";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
 export const useLike = (postId: string, initialLikes: number) => {
   const [liked, setLiked] = useState(false);
