@@ -5,8 +5,11 @@ import { Link, useNavigate } from "react-router-dom"
 import { BACKEND_URL } from "../config"
 import { Spinner } from "./Spinner"
 import { useAuthStore } from "../store/auth"
+import { ToastContainer, toast } from 'react-toastify';
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
+
+    const notify = () => toast.error("Error while signing up")
 
     // Type of inputs are specified using the npm package created using common folder
     const [postInputs, setPostInputs] = useState<SignupInput>({
@@ -39,7 +42,9 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             navigate("/blogs")
 
         } catch (error) {
-            alert("Error while signing up")
+            
+            notify()
+            
             console.log(error)
         } finally {
             setLoading(false)
@@ -93,6 +98,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 type === "signup" ? "Sign up" : "Sign In"
                             )}
                         </button>
+                        <ToastContainer />
                     </div>
                 </div>
             </div>
