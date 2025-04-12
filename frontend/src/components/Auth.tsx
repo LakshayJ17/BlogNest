@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { BACKEND_URL } from "../config"
 import { Spinner } from "./Spinner"
 import { useAuthStore } from "../store/auth"
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { Eye, EyeOff } from "lucide-react";
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
@@ -99,7 +99,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                                 type === "signup" ? "Sign up" : "Sign In"
                             )}
                         </button>
-                        <ToastContainer className="!mt-4 sm:!mt-0 !px-4 sm:!px-0" />
                     </div>
                 </div>
             </div>

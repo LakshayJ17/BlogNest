@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { BACKEND_URL } from "../config";
+import { toast, ToastContainer } from "react-toastify";
 
 export const useLike = (postId: string, initialLikes: number) => {
   const [liked, setLiked] = useState(false);
@@ -21,12 +22,13 @@ export const useLike = (postId: string, initialLikes: number) => {
       })
       .catch((err) => {
         console.error("Failed to fetch liked status:", err);
+        toast.error("Could not fetch like status 😿");
       });
   }, [postId, token]);
 
   const toggleLike = async () => {
     if (!token) {
-      alert("Please sign in to like the post.");
+      toast.error("Please sign in to like the post.");
       return;
     }
 
@@ -45,8 +47,10 @@ export const useLike = (postId: string, initialLikes: number) => {
       console.log(newLiked)
       setLiked(newLiked);
       setLikes((prev) => (newLiked ? prev + 1 : prev - 1));
+      toast.success(newLiked ? "You liked the post ❤️" : "You unliked the post 💔");
     } catch (err) {
       console.error("Failed to toggle like:", err);
+      toast.error("An error occurred while liking the post.");
     }
   };
 

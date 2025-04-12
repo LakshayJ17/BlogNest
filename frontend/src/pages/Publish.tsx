@@ -7,6 +7,7 @@ import { Unauthorized } from "../components/Unauthorized";
 import { Spinner } from "../components/Spinner";
 import { BackButton } from "../components/BackButton";
 import { useAuthStore } from "../store/auth";
+import { toast} from "react-toastify";
 
 export const Publish = () => {
     const [title, setTitle] = useState("");
@@ -17,13 +18,16 @@ export const Publish = () => {
 
     const token = useAuthStore((state) => state.token)
 
+    const notifyWarn = () => toast.warning("Please fill all the fields");
+    const notifyError = () => toast.error("An error occurred while publishing the blog");
+
     if (!token) {
         return <Unauthorized />;
     }
 
     const handlePublish = async () => {
         if (!title || !content) {
-            alert("Please fill all the fields");
+            notifyWarn();
             return;
         }
 
@@ -41,7 +45,7 @@ export const Publish = () => {
             navigate(`/blog/${response.data.id}`);
         } catch (error) {
             console.error("Error publishing the blog:", error);
-            alert("An error occurred while publishing the blog.");
+            notifyError();
         } finally {
             setLoading(false);
         }

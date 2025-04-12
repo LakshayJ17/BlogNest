@@ -6,6 +6,7 @@ import { Blogs } from './pages/Blogs'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Publish } from './pages/Publish'
 import Home from './pages/Home'
+import { ToastContainer } from 'react-toastify'
 
 
 function App() {
@@ -22,6 +23,17 @@ function App() {
           <Route path='/publish' element={<Publish />} />
         </Routes>
       </BrowserRouter>
+
+      <ToastContainer 
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      className="!px-4 sm:!px-0 !mt-4 sm:!mt-0" />
     </>
   )
 }
