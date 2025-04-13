@@ -1,10 +1,6 @@
-import { useNavigate } from "react-router-dom";
-
 export const BackButton = () => {
-    const navigate = useNavigate();
     return (
         <button
-            onClick={() => navigate('/blogs')}
             className="flex justify-center items-center hover:text-gray-700 transition duration-200 ease-in-out cursor-pointer"
         >
             <svg

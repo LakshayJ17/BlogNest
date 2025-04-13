@@ -7,6 +7,7 @@ import { Spinner } from "./Spinner"
 import { useAuthStore } from "../store/auth"
 import { toast } from 'react-toastify';
 import { Eye, EyeOff } from "lucide-react";
+import { BackButton } from "./BackButton"
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
@@ -54,7 +55,18 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     }
 
     return <>
-        <div className="h-screen flex justify-center flex-col">
+        <div className="relative h-screen flex justify-center flex-col">
+            <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10 ">
+                <button
+                    onClick={() => navigate("/")}
+                    className="flex items-center gap-1 text-gray-600 hover:text-black transition-colors"
+                >
+                    <BackButton />
+                    <span className="text-sm font-medium cursor-pointer">Back</span>
+                </button>
+            </div>
+
+
             <div className="flex justify-center">
                 <div>
                     <div className="px-8">
