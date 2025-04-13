@@ -4,6 +4,7 @@ import heroimage from "../assets/heroimage.png"
 import trending1 from "../assets/trending1.png"
 import trending2 from "../assets/trending2.jpeg"
 import trending3 from "../assets/trending3.jpeg"
+import TrendingCard from "../components/TrendingCard"
 
 export default function Home() {
   const navigate = useNavigate();
@@ -139,42 +140,51 @@ export default function Home() {
           </div>
         </section>
 
-        {/* <section className="w-full py-12 md:py-24 lg:py-32 border-t border-b">
+        <section className="w-full py-12 md:py-24 lg:py-32 border-t border-b">
           <div className="container mx-auto max-w-6xl px-4">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Trending on BlogNest</h2>
-                <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Discover stories, thinking, and expertise from writers on any topic.
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogNest</h2>
+                <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed">
+                  Explore top stories, expert insights, and trending topics across multiple domains.
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl gap-8 py-12 md:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="group flex flex-col space-y-4">
-                  <div className="flex justify-center items-start gap-6">
-                    <div className="rounded-full h-8 w-8 border bg-slate-100 flex items-center justify-center text-sm text-slate-500">
-                      U{i}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold group-hover:underline">
-                        How I Built a Successful Blog in 30 Days
-                      </h3>
-                      <p className="text-sm text-slate-500 line-clamp-2">
-                        The journey of creating content that resonates with readers and builds a loyal following.
-                      </p>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                        <span>John Doe</span>
-                        <span>•</span>
-                        <span>5 min read</span>
-                        <span>•</span>
-                        <span>May 26</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+            <div className="grid gap-8 py-12 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  id: 1,
+                  title: "How I Built a Successful Blog in 30 Days",
+                  author: "John Doe",
+                  readTime: "5 min read",
+                  date: "May 26",
+                  category: "Blogging",
+                  image: trending1,
+                },
+                {
+                  id: 2,
+                  title: "The Future of AI: Opportunities & Risks",
+                  author: "Sarah Lee",
+                  readTime: "6 min read",
+                  date: "May 28",
+                  category: "Technology",
+                  image: trending2,
+                },
+                {
+                  id: 3,
+                  title: "10 Essential Tips for Stock Market Beginners",
+                  author: "Michael Smith",
+                  readTime: "7 min read",
+                  date: "May 25",
+                  category: "Finance",
+                  image: trending3,
+                },
+              ].map((article) => (
+                <TrendingCard key={article.id} {...article} />
               ))}
             </div>
+
             <div className="flex justify-center">
               <button
                 type="button"
@@ -185,73 +195,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </section> */}
-
-        <section className="w-full py-12 md:py-24 lg:py-32 border-t border-b">
-  <div className="container mx-auto max-w-6xl px-4">
-    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogNest</h2>
-        <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed">
-          Explore top stories, expert insights, and trending topics across multiple domains.
-        </p>
-      </div>
-    </div>
-
-    <div className="grid gap-8 py-12 md:grid-cols-2 lg:grid-cols-3">
-      {[
-        {
-          id: 1,
-          title: "How I Built a Successful Blog in 30 Days",
-          author: "John Doe",
-          readTime: "5 min read",
-          date: "May 26",
-          category: "Blogging",
-          image: trending1,
-        },
-        {
-          id: 2,
-          title: "The Future of AI: Opportunities & Risks",
-          author: "Sarah Lee",
-          readTime: "6 min read",
-          date: "May 28",
-          category: "Technology",
-          image: trending2,
-        },
-        {
-          id: 3,
-          title: "10 Essential Tips for Stock Market Beginners",
-          author: "Michael Smith",
-          readTime: "7 min read",
-          date: "May 25",
-          category: "Finance",
-          image: trending3,
-        },
-      ].map((article) => (
-        <div key={article.id} className="group flex flex-col rounded-lg border bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-          <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
-          <div className="p-5 space-y-3">
-            <span className="text-xs font-medium text-gray-500">{article.category}</span>
-            <h3 className="text-lg font-bold group-hover:text-blue-600">{article.title}</h3>
-            <div className="text-sm text-gray-500 flex items-center gap-2">
-              <span>{article.author}</span> • <span>{article.readTime}</span> • <span>{article.date}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <div className="flex justify-center">
-      <button
-        type="button"
-        className="cursor-pointer text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center gap-2"
-      >
-        See more articles
-        <ChevronRight className="h-4 w-4" />
-      </button>
-    </div>
-  </div>
-</section>
+        </section>
 
 
         <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50">
