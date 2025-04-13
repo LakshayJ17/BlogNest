@@ -8,13 +8,13 @@ interface LikeButtonProps {
 }
 
 export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
-  const [popping, setPopping] = useState(false);
+  const [animating, setAnimating] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setPopping(true);
+    setAnimating(true);
     onClick();
-    setTimeout(() => setPopping(false), 200); 
+    setTimeout(() => setAnimating(false), 300); // Reset animation
   };
 
   return (
@@ -22,14 +22,15 @@ export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
       <button
         onClick={handleClick}
         aria-label={liked ? "Unlike post" : "Like post"}
-        className="text-xl focus:outline-none cursor-pointer"
+        className="focus:outline-none"
       >
         <Heart
-          fill={liked ? "red" : "none"}
-          color={liked ? "red" : "currentColor"}
-          className={`w-5 h-5 transition-transform duration-200 ${
-            popping ? "scale-125" : ""
-          }`}
+          fill={liked ? "#ef4444" : "none"} // Tailwind red-500
+          color={liked ? "#ef4444" : "currentColor"}
+          className={`w-6 h-6 transition-all duration-300 ease-in-out 
+            ${animating ? "scale-125" : "scale-100"} 
+            ${liked ? "drop-shadow-md" : ""}
+          `}
         />
       </button>
       <span>{likes} {likes === 1 ? "like" : "likes"}</span>
