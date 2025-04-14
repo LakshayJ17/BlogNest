@@ -24,16 +24,16 @@ function App() {
         </Routes>
       </BrowserRouter>
 
-      <ToastContainer 
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      className="!px-4 sm:!px-0 !mt-4 sm:!mt-0" />
+      <ToastContainer
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        className="!px-4 sm:!px-0 !mt-4 sm:!mt-0" />
     </>
   )
 }

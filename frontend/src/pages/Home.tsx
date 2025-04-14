@@ -5,6 +5,7 @@ import trending1 from "../assets/trending1.png";
 import trending2 from "../assets/trending2.jpeg";
 import trending3 from "../assets/trending3.jpeg";
 import TrendingCard from "../components/TrendingCard";
+import { TypeAnimation } from 'react-type-animation';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -18,7 +19,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div style={{ fontFamily: '"Signika", sans-serif' }}
+    className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
@@ -60,9 +62,27 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-2 items-center">
               <div className="space-y-4">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-5xl xl:text-6xl">
-                  Where good ideas find you
-                </h1>
+                <div style={{
+                  fontFamily: '"Signika", sans-serif',
+                  fontWeight: 800,
+                }}
+                  className="text-3xl font-bold tracking-tight sm:text-5xl xl:text-6xl">
+                  <TypeAnimation
+                    sequence={[
+                      "Welcome to BlogNest", 2000,
+                      "Where good ideas find you", 2000,
+                      "Where creativity meets clarity", 2000,
+                      "Where words carry weight", 2000,
+                      "Where stories begin again", 2000,
+                    ]}
+                    wrapper="span"
+                    speed={30}
+                    deletionSpeed={20}
+                    repeat={Infinity}
+                    className="text-gray-900 inline-block transition-all duration-300"
+                  />
+
+                </div>
                 <p className="max-w-[600px] text-slate-500 md:text-xl">
                   Read and share ideas from independent voices, world-class publications, and experts from around the globe. Anyone can publish on BlogNest.
                 </p>
