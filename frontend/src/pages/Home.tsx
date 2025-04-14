@@ -48,7 +48,7 @@ export default function Home() {
             <button
               type="button"
               onClick={handleSignup}
-              className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+              className="cursor-pointer text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
             >
               Get Started
             </button>
@@ -89,7 +89,7 @@ export default function Home() {
                 <div className="flex flex-col justify-center lg:justify-start gap-2 sm:flex-row">
                   <button
                     onClick={handleSignup}
-                    className="cursor-pointer w-full sm:w-auto text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+                    className="cursor-pointer w-full sm:w-auto text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Start writing
                   </button>
@@ -219,7 +219,7 @@ export default function Home() {
         </section>
 
         {/* Call to Action */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-900 text-white text-center">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-blue-950 text-white text-center">
           <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-4">
             <h2 className="text-3xl sm:text-4xl font-bold">Ready to start writing?</h2>
             <p className="max-w-xl mx-auto text-slate-300 md:text-xl">
@@ -228,12 +228,12 @@ export default function Home() {
             <div className="flex flex-col gap-2 sm:flex-row justify-center">
               <button
                 onClick={handleSignup}
-                className="bg-white text-gray-900 hover:bg-gray-100 rounded-lg text-sm px-5 py-2.5"
+                className="cursor-pointer bg-white text-gray-900 hover:bg-gray-100 rounded-lg text-sm px-5 py-2.5"
               >
                 Get started
               </button>
               <button
-                className="bg-transparent border border-white hover:bg-slate-800 text-white rounded-lg text-sm px-5 py-2.5"
+                className="cursor-pointer bg-transparent border border-white hover:bg-blue-900 text-white rounded-lg text-sm px-5 py-2.5"
               >
                 Learn more
               </button>
