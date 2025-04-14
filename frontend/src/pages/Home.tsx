@@ -66,7 +66,7 @@ export default function Home() {
                   fontFamily: '"Signika", sans-serif',
                   fontWeight: 800,
                 }}
-                  className="px-2 text-center text-4xl font-bold tracking-tight sm:text-5xl sm:text-left xl:text-6xl">
+                  className="px-2 text-center text-4xl font-bold tracking-tight  sm:text-5xl md:text-left xl:text-6xl">
                   <TypeAnimation
                     sequence={[
                       "Welcome to BlogNest", 2000,
@@ -83,10 +83,10 @@ export default function Home() {
                   />
 
                 </div>
-                <p className="text-justify max-w-[600px] text-slate-500 md:text-xl">
+                <p className="text-justify max-w-[700px] text-slate-500 sm:text-xl">
                   Read and share ideas from independent voices, world-class publications, and experts from around the globe. Anyone can publish on BlogNest.
                 </p>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex flex-col justify-center lg:justify-start gap-2 sm:flex-row">
                   <button
                     onClick={handleSignup}
                     className="cursor-pointer w-full sm:w-auto text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
@@ -194,7 +194,7 @@ export default function Home() {
           <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-10 lg:grid-cols-2">
               <div className="flex flex-col justify-center space-y-4">
-                <h2 className="text-center text-4xl sm:text-left font-bold">Start your writing journey today</h2>
+                <h2 className="text-center text-4xl md:text-left font-bold">Start your writing journey today</h2>
                 <p className="text-center text-slate-500 md:text-xl">Join thousands of writers who’ve already found their voice.</p>
               </div>
               <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
