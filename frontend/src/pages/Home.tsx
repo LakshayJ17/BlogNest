@@ -119,7 +119,7 @@ export default function Home() {
         <section className="w-full py-12 md:py-24 lg:py-32 border-t border-b">
           <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-2 mb-12">
-              <h2 className="text-2xl sm:text-5xl font-bold">🔥 Trending on BlogNest</h2>
+              <h2 className="text-2xl sm:text-5xl font-bold">Trending on BlogNest</h2>
               <p className="text-slate-500 md:text-xl">Explore top stories, expert insights, and trending topics.</p>
             </div>
 
