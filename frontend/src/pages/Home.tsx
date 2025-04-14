@@ -69,13 +69,13 @@ export default function Home() {
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={handleSignup}
-                    className="w-full sm:w-auto text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+                    className="cursor-pointer w-full sm:w-auto text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Start writing
                   </button>
                   <button
                     onClick={handleSignin}
-                    className="w-full sm:w-auto text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+                    className="cursor-pointer w-full sm:w-auto text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Explore articles
                   </button>
