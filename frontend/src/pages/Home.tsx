@@ -1,24 +1,25 @@
-import { Edit, TrendingUp, Users, ChevronRight } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
-import heroimage from "../assets/heroimage.png"
-import trending1 from "../assets/trending1.png"
-import trending2 from "../assets/trending2.jpeg"
-import trending3 from "../assets/trending3.jpeg"
-import TrendingCard from "../components/TrendingCard"
+import { Edit, TrendingUp, Users, ChevronRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import heroimage from "../assets/heroimage.png";
+import trending1 from "../assets/trending1.png";
+import trending2 from "../assets/trending2.jpeg";
+import trending3 from "../assets/trending3.jpeg";
+import TrendingCard from "../components/TrendingCard";
 
 export default function Home() {
   const navigate = useNavigate();
 
   function handleSignin() {
-    navigate("/signin")
+    navigate("/signin");
   }
 
   function handleSignup() {
-    navigate("/signup")
+    navigate("/signup");
   }
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
           <div className="text-xl font-bold">BlogNest</div>
@@ -39,7 +40,7 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link to="/signin" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+            <Link to="/signin" className="hidden sm:block text-sm font-medium text-slate-600 hover:text-slate-900">
               Sign In
             </Link>
             <button
@@ -52,106 +53,77 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Hero Section */}
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 border-b">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Where good ideas find you
-                  </h1>
-                  <p className="max-w-[600px] text-slate-500 md:text-xl">
-                    Read and share ideas from independent voices, world-class publications, and experts from around the
-                    globe. Anyone can publish on BlogNest.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+          <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-2 items-center">
+              <div className="space-y-4">
+                <h1 className="text-3xl font-bold tracking-tight sm:text-5xl xl:text-6xl">
+                  Where good ideas find you
+                </h1>
+                <p className="max-w-[600px] text-slate-500 md:text-xl">
+                  Read and share ideas from independent voices, world-class publications, and experts from around the globe. Anyone can publish on BlogNest.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
-                    type="button"
                     onClick={handleSignup}
-                    className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+                    className="w-full sm:w-auto text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Start writing
                   </button>
                   <button
-                    type="button"
                     onClick={handleSignin}
-                    className="cursor-pointer text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+                    className="w-full sm:w-auto text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Explore articles
                   </button>
                 </div>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="h-[350px] w-full max-w-[550px] rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
-                  <img src={heroimage} alt="" />
-                </div>
+              <div className="flex justify-center">
+                <img src={heroimage} alt="hero" className="w-full max-w-md h-auto rounded-lg object-cover" />
               </div>
             </div>
           </div>
         </section>
 
+        {/* Features */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why BlogNest?</h2>
-                <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  A platform that puts your ideas first. No distractions, just pure content.
-                </p>
-              </div>
+          <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-4 mb-10">
+              <h2 className="text-3xl sm:text-5xl font-bold">Why BlogNest?</h2>
+              <p className="text-slate-500 md:text-xl">
+                A platform that puts your ideas first. No distractions, just pure content.
+              </p>
             </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-12">
-              <div className="flex flex-col justify-center space-y-4 rounded-lg border bg-white p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-                  <Edit className="h-6 w-6 text-slate-800" />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { Icon: Edit, title: "Easy Publishing", desc: "Write your story, format it with our intuitive editor, and publish with a single click." },
+                { Icon: Users, title: "Engaged Community", desc: "Connect with readers and writers who share your interests and passions." },
+                { Icon: TrendingUp, title: "Grow Your Audience", desc: "Our recommendation system helps your content reach the right readers." },
+              ].map(({ Icon, title, desc }, index) => (
+                <div key={index} className="flex flex-col justify-center space-y-4 rounded-lg border bg-white p-6 shadow-sm">
+                  <div className="h-12 w-12 flex items-center justify-center bg-slate-100 rounded-lg">
+                    <Icon className="h-6 w-6 text-slate-800" />
+                  </div>
+                  <h3 className="text-xl font-bold">{title}</h3>
+                  <p className="text-sm text-slate-500">{desc}</p>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">Easy Publishing</h3>
-                  <p className="text-sm text-slate-500">
-                    Write your story, format it with our intuitive editor, and publish with a single click.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col justify-center space-y-4 rounded-lg border bg-white p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-                  <Users className="h-6 w-6 text-slate-800" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">Engaged Community</h3>
-                  <p className="text-sm text-slate-500">
-                    Connect with readers and writers who share your interests and passions.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col justify-center space-y-4 rounded-lg border bg-white p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-                  <TrendingUp className="h-6 w-6 text-slate-800" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold">Grow Your Audience</h3>
-                  <p className="text-sm text-slate-500">
-                    Our recommendation system helps your content reach the right readers.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
+        {/* Trending Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 border-t border-b">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">🔥 Trending on BlogNest</h2>
-                <p className="max-w-[900px] text-slate-500 md:text-xl/relaxed">
-                  Explore top stories, expert insights, and trending topics across multiple domains.
-                </p>
-              </div>
+          <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-2 mb-12">
+              <h2 className="text-2xl sm:text-5xl font-bold">🔥 Trending on BlogNest</h2>
+              <p className="text-slate-500 md:text-xl">Explore top stories, expert insights, and trending topics.</p>
             </div>
 
-            <div className="grid gap-8 py-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 {
                   id: 1,
@@ -185,10 +157,10 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-10">
               <button
                 type="button"
-                className="cursor-pointer text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center gap-2"
+                className="cursor-pointer text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center gap-2"
               >
                 See more articles
                 <ChevronRight className="h-4 w-4" />
@@ -197,98 +169,72 @@ export default function Home() {
           </div>
         </section>
 
-
+        {/* Newsletter Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
+          <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-2">
               <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Start your writing journey today</h2>
-                  <p className="max-w-[600px] text-slate-500 md:text-xl/relaxed">
-                    Join thousands of writers who have already found their voice on BlogNest. It's free to start.
-                  </p>
-                </div>
+                <h2 className="text-center text-4xl sm:text-left font-bold">Start your writing journey today</h2>
+                <p className="text-center text-slate-500 md:text-xl">Join thousands of writers who’ve already found their voice.</p>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="space-y-4 rounded-lg border bg-white p-8 shadow-sm w-full max-w-md">
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold">Subscribe to our newsletter</h3>
-                    <p className="text-sm text-slate-500">Get the best content delivered directly to your inbox.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
-                      />
-                      <button
-                        type="submit"
-                        className="cursor-pointer text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
-                      >
-                        Subscribe
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-500">
-                      By subscribing, you agree to our Terms of Service and Privacy Policy.
-                    </p>
-                  </div>
+              <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+                <h3 className="text-xl font-bold">Subscribe to our newsletter</h3>
+                <p className="text-sm text-slate-500">Get the best content delivered to your inbox.</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  <button className="text-white bg-gray-800 hover:bg-gray-900 rounded-lg text-sm px-5 py-2.5">
+                    Subscribe
+                  </button>
                 </div>
+                <p className="text-xs text-slate-500">
+                  By subscribing, you agree to our Terms of Service and Privacy Policy.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-900 text-white">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Ready to start writing?</h2>
-                <p className="max-w-[600px] text-slate-300 md:text-xl/relaxed">
-                  Join our community of writers and readers. Share your perspective with the world.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <button
-                  type="button"
-                  onClick={handleSignup}
-                  className="cursor-pointer bg-white text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
-                >
-                  Get started
-                </button>
-                <button
-                  type="button"
-                  className="cursor-pointer bg-transparent text-white border border-white hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-700 font-medium rounded-lg text-sm px-5 py-2.5"
-                >
-                  Learn more
-                </button>
-              </div>
+        {/* Call to Action */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-900 text-white text-center">
+          <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-bold">Ready to start writing?</h2>
+            <p className="max-w-xl mx-auto text-slate-300 md:text-xl">
+              Join our community of writers and readers. Share your perspective with the world.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row justify-center">
+              <button
+                onClick={handleSignup}
+                className="bg-white text-gray-900 hover:bg-gray-100 rounded-lg text-sm px-5 py-2.5"
+              >
+                Get started
+              </button>
+              <button
+                className="bg-transparent border border-white hover:bg-slate-800 text-white rounded-lg text-sm px-5 py-2.5"
+              >
+                Learn more
+              </button>
             </div>
           </div>
         </section>
       </main>
+
+      {/* Footer */}
       <footer className="w-full border-t bg-white py-6">
-        <div className="container mx-auto max-w-6xl flex flex-col items-center justify-between gap-4 md:flex-row px-4">
-          <div className="flex items-center">
-            <span className="text-lg font-bold">BlogNest</span>
-          </div>
-          <nav className="flex gap-4 sm:gap-6">
-            <Link to="#" className="cursor-pointer text-xs hover:underline underline-offset-4">
-              Terms of Service
-            </Link>
-            <Link to="#" className="cursor-pointer text-xs hover:underline underline-offset-4">
-              Privacy
-            </Link>
-            <Link to="#" className="cursor-pointer text-xs hover:underline underline-offset-4">
-              Cookies
-            </Link>
+        <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex flex-col gap-4 sm:flex-row justify-between items-center">
+          <div className="text-lg font-bold">BlogNest</div>
+          <nav className="flex gap-4 text-xs text-slate-500">
+            <Link to="#" className="hover:underline">Terms of Service</Link>
+            <Link to="#" className="hover:underline">Privacy</Link>
+            <Link to="#" className="hover:underline">Cookies</Link>
           </nav>
-          <div className="flex items-center">
-            <p className="text-xs text-slate-500">© {new Date().getFullYear()} BlogNest. All rights reserved.</p>
-          </div>
+          <p className="text-xs text-slate-400">© {new Date().getFullYear()} BlogNest. All rights reserved.</p>
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
