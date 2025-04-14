@@ -66,7 +66,7 @@ export default function Home() {
                   fontFamily: '"Signika", sans-serif',
                   fontWeight: 800,
                 }}
-                  className="text-3xl font-bold tracking-tight sm:text-5xl xl:text-6xl">
+                  className="px-2 text-center text-4xl font-bold tracking-tight sm:text-5xl sm:text-left xl:text-6xl">
                   <TypeAnimation
                     sequence={[
                       "Welcome to BlogNest", 2000,
@@ -83,7 +83,7 @@ export default function Home() {
                   />
 
                 </div>
-                <p className="max-w-[600px] text-slate-500 md:text-xl">
+                <p className="text-justify max-w-[600px] text-slate-500 md:text-xl">
                   Read and share ideas from independent voices, world-class publications, and experts from around the globe. Anyone can publish on BlogNest.
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
