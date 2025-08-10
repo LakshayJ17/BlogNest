@@ -10,6 +10,9 @@ export interface Blog {
     "date": string;
     "author": {
         "name": string;
+        "googleId"?:string;
+        "avatar"?:string;
+        "bio": string;
     };
     "_count": {
         "likes": number;

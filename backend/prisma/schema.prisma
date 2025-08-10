@@ -20,6 +20,7 @@ model User {
   password String?
   googleId String? @unique 
   avatar   String?
+  bio      String @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
   posts    Post[]
   likes    Like[]
 }

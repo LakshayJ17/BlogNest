@@ -36,20 +36,20 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                     </div>
 
                     <div className="lg:col-span-4">
-                        <div className="text-slate-600 text-lg sm:text-xl">
+                        <div className="text-slate-600 font-bold text-lg sm:text-xl">
                             Author
                         </div>
                         <div className="flex items-start gap-4 pt-4">
-                            <div>
-                                <Avatar name={blog.author.name || "Anonymous"} size="big" />
+                            <div className="w-16 pt-1">
+                                <Avatar name={blog.author.name} authorData={blog.author} size="small" />
                             </div>
 
                             <div>
                                 <div className="text-xl font-bold">
-                                    {blog.author.name || "Anonymous"}
+                                    {blog.author.name}
                                 </div>
                                 <div className="pt-2 text-slate-500 text-sm sm:text-base">
-                                    Random catchphrase about why he is better than rest of others and what is special about the author. Hahaha
+                                    {blog.author.bio}
                                 </div>
                             </div>
                         </div>

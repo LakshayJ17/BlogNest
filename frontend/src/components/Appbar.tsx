@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Avatar } from "./BlogCard";
 import { useAuthStore } from "../store/auth";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, PlusCircle } from "lucide-react";
 
 export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React.ReactNode }) => {
     const { user, logout } = useAuthStore()
@@ -38,8 +38,9 @@ export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React
                 <Link to="/publish">
                     <button
                         type="button"
-                        className="cursor-pointer mr-4 text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center transition duration-200 ease-in-out"
+                        className="flex gap-2 items-center justify-center cursor-pointer mr-4 text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-xl text-sm py-2.5 px-2 text-center transition duration-200 ease-in-out w-22"
                     >
+                        <PlusCircle />
                         New
                     </button>
                 </Link>

@@ -168,6 +168,7 @@ userRouter.get("/me", async (c) => {
             email: user.email,
             googleId: user.googleId,
             avatar: user.avatar,
+            bio: user.bio,
             posts: user.posts,
             likes: user.likes,
         });

@@ -73,7 +73,7 @@ export function Avatar({
     } | null;
 }) {
     const sizeClasses = size === "small" ? "w-6 h-6 text-sm" : "w-10 h-10 text-lg";
-
+    
     return (
         <>
             {authorData?.googleId ? (

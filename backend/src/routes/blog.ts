@@ -100,7 +100,8 @@ blogRouter.get('/bulk', async (c) => {
                 select: {
                     name: true,
                     googleId: true,
-                    avatar: true
+                    avatar: true,
+                    bio: true,
                 }
             },
             _count: {
@@ -135,7 +136,10 @@ blogRouter.get('/:id', async (c) => {
                 date: true,
                 author: {
                     select: {
-                        name: true
+                        name: true,
+                        googleId: true,
+                        avatar: true,
+                        bio: true
                     }
                 },
                 _count: {
