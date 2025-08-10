@@ -7,7 +7,6 @@ import { User, LogOut } from "lucide-react";
 export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React.ReactNode }) => {
     const { user, logout } = useAuthStore()
     const name = user?.name || "Anonymous";
-    const firstLetter = name.trim()[0]?.toUpperCase() || "A";
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
