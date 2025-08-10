@@ -60,23 +60,70 @@ userRouter.post('/signin', async (c) => {
     }).$extends(withAccelerate());
 
 
-    const user = await prisma.user.findUnique({
-        where: {
-            email: body.email,
-            password: body.password,
-        }
-    })
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: body.email,
+                password: body.password,
+            }
+        })
 
-    if (!user) {
-        c.status(403);
-        return c.json({ error: "user not found" });
+        if (!user) {
+            c.status(403);
+            return c.json({ error: "user not found" });
+        }
+        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
+        return c.json({
+            jwt,
+            name: user.name || "Anonymous"
+        });
+    } catch(error){
+        console.log("Error in signin", error)
+        c.status(400)
+        return c.json({error : "Error signing in"})
     }
 
-    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-    return c.json({
-        jwt,
-        name: user.name || "Anonymous"
-    });
+    
+})
 
+userRouter.post('/google-auth', async (c) => {
+    const body = await c.req.json();
+    const { email, name, googleId, avatar } = body;
 
+    if (!email || !googleId) {
+        c.status(400);
+        return c.json({ error: "Email and Google ID are required" })
+    }
+
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    try {
+        let user = await prisma.user.findUnique({
+            where: { email: email }
+        })
+
+        if (!user) {
+            user = await prisma.user.create({
+                data: {
+                    email: email,
+                    name: name || "Google User",
+                    googleId: googleId,
+                    avatar: avatar
+                }
+            })
+        }
+        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
+        return c.json({
+            jwt,
+            name: user.name || "Anonymous"
+        });
+    } catch (error) {
+        console.log("Error during google signup/signin", error);
+        c.status(500)
+        return c.json({ error: "Error in Google authentication" })
+    } finally {
+        await prisma.$disconnect()
+    }
 })

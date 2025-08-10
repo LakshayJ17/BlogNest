@@ -17,9 +17,11 @@ model User {
   id       String   @id @default(uuid())
   email    String   @unique
   name     String?
-  password String
+  password String?
+  googleId String? @unique 
+  avatar   String?
   posts    Post[]
-  likes   Like[]
+  likes    Like[]
 }
 
 model Post {

@@ -1,155 +1,231 @@
-import { SignupInput } from "@lakshayj17/common-app"
-import axios from "axios"
-import { ChangeEvent, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { BACKEND_URL } from "../config"
-import { Spinner } from "./Spinner"
-import { useAuthStore } from "../store/auth"
-import { toast } from 'react-toastify';
+import { SignupInput } from "@lakshayj17/common-app";
+import axios from "axios";
+import { ChangeEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../config";
+import { Spinner } from "./Spinner";
+import { useAuthStore } from "../store/auth";
+import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react";
-import { BackButton } from "./BackButton"
+import { BackButton } from "./BackButton";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
+  const notify = () => toast.error("Error while signing up");
 
-    const notify = () => toast.error("Error while signing up")
+  const [postInputs, setPostInputs] = useState<SignupInput>({
+    name: "",
+    email: "",
+    password: "",
+  });
 
-    // Type of inputs are specified using the npm package created using common folder
-    const [postInputs, setPostInputs] = useState<SignupInput>({
-        name: "",
-        email: "",
-        password: "",
-    })
+  const [loading, setLoading] = useState(false);
 
-    const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
 
-    const navigate = useNavigate();
+  const setToken = useAuthStore((state) => state.setToken);
+  const setName = useAuthStore((state) => state.setName);
 
-    const setToken = useAuthStore((state) => state.setToken)
-    const setName = useAuthStore((state) => state.setName)
+  async function sendRequest() {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`,
+        postInputs
+      );
 
-    async function sendRequest() {
-        setLoading(true)
-        try {
-            // zod will ignore name field in case of signin
-            const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs);
-            // console.log(response.data)
+      const { jwt, name } = response.data;
+      setToken(jwt);
+      console.log(name);
+      setName(name);
 
-            const { jwt, name } = response.data;
-            setToken(jwt);
-            console.log(name)
-            setName(name);
+      navigate("/blogs");
+    } catch (error) {
+      notify();
 
-
-            // localStorage.setItem("token", jwt);
-            navigate("/blogs")
-
-        } catch (error) {
-
-            notify()
-
-            console.log(error)
-        } finally {
-            setLoading(false)
-        }
-
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return <>
-        <div className="relative h-screen flex justify-center flex-col">
-            <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10 ">
-                <button
-                    onClick={() => navigate("/")}
-                    className="flex items-center gap-1 text-gray-600 hover:text-black transition-colors"
-                >
-                    <BackButton />
-                    <span className="text-sm font-medium cursor-pointer">Back</span>
-                </button>
-            </div>
+  const handleGoogleAuth = async (credentialResponse: any) => {
+    try {
+      const decoded: any = jwtDecode(credentialResponse.credential);
+      const response = await axios.post(
+        `${BACKEND_URL}/api/v1/user/google-auth`,
+        {
+          email: decoded.email,
+          name: decoded.name,
+          googleId: decoded.sub,
+          avatar: decoded.picture,
+        }
+      );
 
+      const { jwt, name } = response.data;
+      setToken(jwt);
+      setName(name);
+      navigate("/blogs");
+    } catch (error) {
+      notify();
+      console.log("Error in google auth", error);
+    }
+  };
 
-            <div className="flex justify-center">
-                <div>
-                    <div className="px-8">
-                        <div className="text-center text-3xl sm:text-5xl font-bold">
-                            {type === "signup" ? "Create an account" : "Welcome back  "}
-                        </div>
-                        <div className="text-slate-600 text-center">
-                            {type === "signup" ? "Already have an account ?" : "Don't have an account ?"}
-                            <Link className="pl-2 underline" to={type === "signin" ? "/signup" : "/signin"}>
-                                {type === "signup" ? "Log In" : "Sign Up"}
-                            </Link>
-                        </div>
-                    </div>
+  const handleGoogleError = () => {
+    toast.error("Google sign-in failed");
+  };
 
-                    <div className="py-5 space-y-5">
-                        {type === "signup" ? <LabeledInput label="Name" placeholder="Enter your name" onChange={(e) => {
-                            setPostInputs({
-                                ...postInputs,
-                                name: e.target.value
-                            });
-                            // localStorage.setItem("name", e.target.value);
-                        }} /> : null}
-
-                        <LabeledInput label="Email" placeholder="Enter your email" onChange={(e) => {
-                            setPostInputs({
-                                ...postInputs,
-                                email: e.target.value
-                            })
-                        }} />
-                        <LabeledInput label="Password" type={"password"} placeholder="Enter password" onChange={(e) => {
-                            setPostInputs({
-                                ...postInputs,
-                                password: e.target.value
-                            })
-                        }} />
-                        <button onClick={sendRequest} type="button" className="cursor-pointer mt-3 w-full text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-4 me-2 mb-2">
-                            {loading ? (
-                                <div className="flex items-center justify-center">
-                                    <Spinner size="small" />
-                                </div>
-                            ) : (
-                                type === "signup" ? "Sign up" : "Sign In"
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
+          <BackButton />
         </div>
-    </>
-}
+
+        <div className="text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            {type === "signup" ? "Create an account" : "Welcome back"}
+          </h1>
+          <p className="text-gray-600">
+            {type === "signup"
+              ? "Already have an account?"
+              : "Don't have an account?"}
+            <Link
+              className="ml-2 text-blue-600 hover:text-blue-800 underline font-medium"
+              to={type === "signin" ? "/signup" : "/signin"}
+            >
+              {type === "signup" ? "Sign In" : "Sign Up"}
+            </Link>
+          </p>
+        </div>
+
+        <form
+          className="space-y-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendRequest();
+          }}
+        >
+          {type === "signup" && (
+            <LabeledInput
+              label="Name"
+              placeholder="Enter your name"
+              onChange={(e) => {
+                setPostInputs({
+                  ...postInputs,
+                  name: e.target.value,
+                });
+              }}
+            />
+          )}
+
+          <LabeledInput
+            label="Email"
+            placeholder="Enter your email"
+            onChange={(e) => {
+              setPostInputs({
+                ...postInputs,
+                email: e.target.value,
+              });
+            }}
+          />
+
+          <LabeledInput
+            label="Password"
+            type="password"
+            placeholder="Enter password"
+            onChange={(e) => {
+              setPostInputs({
+                ...postInputs,
+                password: e.target.value,
+              });
+            }}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <Spinner size="small" />
+              </div>
+            ) : type === "signup" ? (
+              "Sign Up"
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-gray-50 text-gray-500 font-medium">
+              or continue with
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleAuth}
+            onError={handleGoogleError}
+            theme="outline"
+            size="large"
+            text={type === "signup" ? "signup_with" : "signin_with"}
+            shape="pill"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface LabeledInputType {
-    label: string;
-    placeholder: string;
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-    type?: string;
-
+  label: string;
+  placeholder: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
 }
 
-function LabeledInput({ label, placeholder, onChange, type }: LabeledInputType) {
-    const [showPassword, setShowPassword] = useState(false);
-    const isPasswordField = type === "password";
+function LabeledInput({
+  label,
+  placeholder,
+  onChange,
+  type,
+}: LabeledInputType) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordField = type === "password";
 
-    return <div>
-        <label className="block mb-2 text-sm font-semibold text-black">{label}</label>
-        <div className="relative">
-            <input
-                onChange={onChange}
-                type={isPasswordField && !showPassword ? "password" : "text"}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-3"
-                placeholder={placeholder}
-                required
-            />
-            {isPasswordField && (
-                <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-600 hover:text-black focus:outline-none"
-                >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-            )}
-        </div>
-
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          onChange={onChange}
+          type={isPasswordField && !showPassword ? "password" : "text"}
+          className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          placeholder={placeholder}
+          required
+        />
+        {isPasswordField && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
+      </div>
     </div>
+  );
 }
