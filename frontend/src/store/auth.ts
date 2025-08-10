@@ -1,32 +1,76 @@
+import axios from 'axios';
 import { create } from 'zustand'
+import { BACKEND_URL } from '../config';
 
-interface AuthState {
-    token : string | null;
-    name : string | null;
-    setToken: (token : string) => void;
-    setName: (name : string) => void;
-    logout: () => void;
-    
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    googleId?: string;
+    avatar?: string;
+    posts: Array<{
+        id: string;
+        title: string;
+        content: string;
+        published: boolean;
+        date: string;
+    }>;
+    likes: Array<{
+        id: string;
+        postId: string;
+        createdAt: string;
+    }>
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-    token : localStorage.getItem('token'),
-    name : localStorage.getItem('name'),
+interface AuthState {
+    token: string | null;
+    setToken: (token: string) => void
+    logout: () => void;
+    user: User | null;
+    setUser: (user: User) => void;
+    fetchUserData: () => Promise<void>;
+}
 
-    setToken : (token) => {
+export const useAuthStore = create<AuthState>((set, get) => ({
+    token: localStorage.getItem('token'),
+
+    setToken: (token) => {
         localStorage.setItem('token', token)
-        set({token})
-    },
-
-    setName : (name) => {
-        localStorage.setItem('name', name)
-        set({name})
+        set({ token })
     },
 
     logout: () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("name");
-        set({ token: null, name: null });
+        set({ token: null, user: null });
+    },
+
+    user: null,
+
+    setUser: (user) => {
+        set({ user })
+    },
+
+    fetchUserData: async () => {
+        const { token } = get()
+        if (!token) return
+
+        try {
+            const response = await axios.get(`${BACKEND_URL}/api/v1/user/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (response.status === 200) {
+                const userData = response.data;
+                set({ user: userData })
+            } else{
+                get().logout()
+            }
+        } catch(error){
+            console.log("Error fetching user details : ", error)
+            get().logout()
+        }
     },
 
 }))

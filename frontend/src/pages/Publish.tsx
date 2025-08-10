@@ -14,9 +14,8 @@ export const Publish = () => {
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    // const token = localStorage.getItem("token");
 
-    const token = useAuthStore((state) => state.token)
+    const {token} = useAuthStore()
 
     const notifyWarn = () => toast.warning("Please fill all the fields");
     const notifyError = () => toast.error("An error occurred while publishing the blog");

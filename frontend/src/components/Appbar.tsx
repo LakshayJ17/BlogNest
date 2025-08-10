@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Avatar } from "./BlogCard";
 import { useAuthStore } from "../store/auth";
-import { User, LogOut } from "lucide-react"; 
+import { User, LogOut } from "lucide-react";
 
 export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React.ReactNode }) => {
-    const name = useAuthStore((state) => state.name) || "Anonymous";
-    const logout = useAuthStore((state) => state.logout);
+    const { user, logout } = useAuthStore()
+    const name = user?.name || "Anonymous";
     const firstLetter = name.trim()[0]?.toUpperCase() || "A";
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -49,7 +49,7 @@ export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="cursor-pointer hover:scale-105 transition-transform duration-150"
                 >
-                    <Avatar name={firstLetter} size="big" />
+                    <Avatar name={name} authorData={user} size="big" />
                 </div>
 
                 {dropdownOpen && (

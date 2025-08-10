@@ -25,7 +25,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   const navigate = useNavigate();
 
   const setToken = useAuthStore((state) => state.setToken);
-  const setName = useAuthStore((state) => state.setName);
 
   async function sendRequest() {
     setLoading(true);
@@ -35,10 +34,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         postInputs
       );
 
-      const { jwt, name } = response.data;
+      const { jwt } = response.data;
       setToken(jwt);
-      console.log(name);
-      setName(name);
 
       navigate("/blogs");
     } catch (error) {
@@ -63,9 +60,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         }
       );
 
-      const { jwt, name } = response.data;
+      const { jwt } = response.data;
       setToken(jwt);
-      setName(name);
       navigate("/blogs");
     } catch (error) {
       notify();

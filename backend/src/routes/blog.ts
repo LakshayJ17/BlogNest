@@ -26,7 +26,7 @@ blogRouter.use('/*', async (c, next) => {
         c.status(401);
         return c.json({ error: "unauthorized" });
     }
-    c.set('userId', payload.id);
+    c.set('userId', (payload as {id: string}).id);
     await next()
 });
 
@@ -98,7 +98,9 @@ blogRouter.get('/bulk', async (c) => {
             date: true,
             author: {
                 select: {
-                    name: true
+                    name: true,
+                    googleId: true,
+                    avatar: true
                 }
             },
             _count: {

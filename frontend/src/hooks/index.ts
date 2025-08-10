@@ -1,6 +1,7 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { BACKEND_URL } from "../config"
+import { useAuthStore } from "../store/auth";
 
 export interface Blog {
     "content": string;
@@ -19,9 +20,10 @@ export interface Blog {
 export const useBlog = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(true)
     const [blog, setBlog] = useState<Blog>()
+    const { token } = useAuthStore();
 
-    const token = localStorage.getItem("token")
     useEffect(() => {
+        if (!token) return
         axios.get(`${BACKEND_URL}/api/v1/blog/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -32,7 +34,7 @@ export const useBlog = ({ id }: { id: string }) => {
                 setBlog(response.data.post)
                 setLoading(false)
             })
-    }, [])
+    }, [id, token])
 
     return { loading, blog }
 }
@@ -41,8 +43,11 @@ export const useBlogs = () => {
     const [loading, setLoading] = useState(true)
     const [blogs, setBlogs] = useState<Blog[]>([])
 
-    const token = localStorage.getItem("token")
+    const { token } = useAuthStore();
+
     useEffect(() => {
+        if (!token) return
+
         axios.get(`${BACKEND_URL}/api/v1/blog/bulk`, {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -53,7 +58,7 @@ export const useBlogs = () => {
                 setBlogs(response.data.posts)
                 setLoading(false)
             })
-    }, [])
+    }, [token])
 
     return { loading, blogs }
 }

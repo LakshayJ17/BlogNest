@@ -7,10 +7,18 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Publish } from './pages/Publish'
 import Home from './pages/Home'
 import { ToastContainer } from 'react-toastify'
+import { useAuthStore } from './store/auth'
+import { useEffect } from 'react'
 
 
 function App() {
+  const { token, fetchUserData } = useAuthStore();
 
+  useEffect(() => {
+    if (token) {
+      fetchUserData()
+    }
+  }, [token, fetchUserData])
   return (
     <>
       <BrowserRouter>

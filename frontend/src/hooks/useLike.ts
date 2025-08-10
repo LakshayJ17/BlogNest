@@ -2,11 +2,12 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { BACKEND_URL } from "../config";
 import { toast } from "react-toastify";
+import { useAuthStore } from "../store/auth";
 
 export const useLike = (postId: string, initialLikes: number) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
-  const token = localStorage.getItem("token");
+  const { token } = useAuthStore();
 
   useEffect(() => {
     if (!token || !postId) return;
