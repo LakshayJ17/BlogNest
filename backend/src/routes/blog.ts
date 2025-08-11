@@ -266,19 +266,20 @@ blogRouter.post('/ai-post', async (c) => {
         apiKey: c.env.OPENAI_API_KEY
     });
 
-    const SYSTEM_PROMPT = `You are an expert blog writer. Write a well-structured, engaging and informative article on the topic : "${title}". 
-    Return only plain text, without any code or technical snippets. 
-    xIf the topic is harmful, unsafe, or inappropriate, do not generate the article and return an error message instead.`
+const SYSTEM_PROMPT = `You are an expert blog writer.
+Write a well-structured, engaging, and informative blog article on the topic: "${title}".
+Return the article in valid HTML format, using headings (<h2>, <h3>), paragraphs (<p>), and lists (<ul>, <ol>) where appropriate.
+Do not include any code blocks.
+If the topic is illegal, violent, or clearly unsafe, do not generate the article and return an error message instead. Otherwise, always generate the article.`;
 
     try {
-        const response = await client.responses.create({
-            model: "gpt-5",
-            input: SYSTEM_PROMPT
+        const response = await client.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "system", content: SYSTEM_PROMPT }]
         });
 
         return c.json({
-            content: response.output_text
-
+            content: response.choices[0].message.content
         })
     } catch (error) {
         console.log("Error in generating content : ", error)

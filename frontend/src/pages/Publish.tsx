@@ -60,6 +60,7 @@ export const Publish = () => {
     }
 
     try {
+      setLoading(true)
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/blog/ai-post`,
         { title },
@@ -69,6 +70,7 @@ export const Publish = () => {
           },
         }
       );
+      setLoading(false)
       setContent(response.data.content);
     } catch (error) {
       console.log("Error generating content : ", error);
@@ -98,7 +100,8 @@ export const Publish = () => {
                 disabled={loading}
                 title="Generate AI Content"
               >
-                <Sparkle />
+                {loading ? <Spinner size="small" /> : <Sparkle />}
+                
               </button>
             </div>
             <TextEditor value={content} onChange={setContent} />

@@ -43,9 +43,7 @@ export const BlogCard = ({
                     <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
                         {title}
                     </h2>
-                    <p className="text-sm text-slate-600 leading-snug line-clamp-2">
-                        {content}
-                    </p>
+                    <p className="text-sm text-slate-600 leading-snug line-clamp-2 prose" dangerouslySetInnerHTML={{__html: content}} />
 
                     <p className="text-xs text-slate-400 pt-1">
                         {minutes} {minutes > 1 ? "mins read" : "min read"}
