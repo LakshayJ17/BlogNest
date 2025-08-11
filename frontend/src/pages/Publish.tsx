@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Appbar } from "../components/Appbar";
 import { BACKEND_URL } from "../config";
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Unauthorized } from "../components/Unauthorized";
 import { Spinner } from "../components/Spinner";
@@ -9,6 +9,7 @@ import { BackButton } from "../components/BackButton";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
 import { Sparkle } from "lucide-react";
+import { Editor } from "@tinymce/tinymce-react";
 
 export const Publish = () => {
   const [title, setTitle] = useState("");
@@ -53,10 +54,10 @@ export const Publish = () => {
   };
 
   const generateAIContent = async (title: string) => {
-    if (!title){
-        toast.error("Please write a title to generate content")
-        return 
-      }
+    if (!title) {
+      toast.error("Please write a title to generate content");
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -70,7 +71,7 @@ export const Publish = () => {
       );
       setContent(response.data.content);
     } catch (error) {
-      console.log("Error generating content : ", error)
+      console.log("Error generating content : ", error);
       toast.error("Error generating ai content");
     }
   };
@@ -80,7 +81,7 @@ export const Publish = () => {
       <Appbar navigateTo="/blogs" label={<BackButton />} />
       <div>
         <div className="flex justify-center px-2 sm:w-full pt-8">
-          <div className="max-w-screen-lg w-full space-y-6 flex flex-col h-screen">
+          <div className="max-w-screen-lg w-full space-y-6 flex flex-col h-screen overflow-y-auto">
             <div className="flex w-full gap-2">
               <input
                 onChange={(e) => setTitle(e.target.value)}
@@ -88,15 +89,19 @@ export const Publish = () => {
                 className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-md font-medium rounded-md focus:ring-blue-500 focus:border-blue-500 block pl-3 py-2 shadow-sm"
                 placeholder="Enter the title of your article..."
                 required
+                autoFocus
+                value={title}
               />
               <button
                 onClick={() => generateAIContent(title)}
                 className="border border-neutral-300 p-2 rounded-lg bg-neutral-100 cursor-pointer shadow-sm"
+                disabled={loading}
+                title="Generate AI Content"
               >
                 <Sparkle />
               </button>
             </div>
-            <TextEditor value={content} onChange={(e) => setContent(e.target.value)} />
+            <TextEditor value={content} onChange={setContent} />
 
             <button
               type="button"
@@ -118,28 +123,56 @@ function TextEditor({
   onChange,
 }: {
   value: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (value: string) => void;
 }) {
   return (
-    <form className="space-y-4">
-      <div className="w-full border border-gray-300 rounded-lg bg-white shadow-sm">
-        <div className="px-4 py-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
-          <label htmlFor="editor" className="text-sm font-medium text-gray-700">
-            Write your article
-          </label>
-        </div>
-        <div className="px-4 py-2">
-          <textarea
-            onChange={onChange}
-            value={value}
-            id="editor"
-            rows={10}
-            className="block w-full px-0 text-base text-gray-800 bg-white border-0 focus:ring-0 focus:outline-none placeholder-gray-400 resize-none"
-            placeholder="Start writing your article here..."
-            required
-          ></textarea>
-        </div>
+    <div className="w-full border bg-white border-gray-300 rounded-lg shadow-sm">
+      <div className="px-4 py-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+        <label htmlFor="editor" className="text-sm font-medium text-gray-700">
+          Write your article
+        </label> 
       </div>
-    </form>
+
+      <Editor
+        apiKey="m416ck6b5y34mnh560253wk4aes8289sf1bwd4ucysit9n0y"
+        onEditorChange={onChange}
+        value={value}
+        id="editor"
+        init={{
+          height: 400,
+          menubar: false,
+          branding: false,
+          statusbar: false,
+          placeholder: "Start writing your article here...",
+          plugins: [
+            "advlist",
+            "autolink",
+            "lists",
+            "link",
+            "image",
+            "charmap",
+            "preview",
+            "anchor",
+            "searchreplace",
+            "visualblocks",
+            "code",
+            "fullscreen",
+            "insertdatetime",
+            "media",
+            "table",
+            "code",
+            "help",
+            "wordcount",
+          ],
+          toolbar:
+            "undo redo | blocks | " +
+            "bold italic forecolor | alignleft aligncenter " +
+            "alignright alignjustify | bullist numlist outdent indent | " +
+            "removeformat | help",
+          content_style:
+            "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+        }}
+      />
+    </div>
   );
 }
