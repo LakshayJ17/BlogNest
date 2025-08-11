@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,26 +8,32 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  name     String   @default("Anonymous")
+  id       String  @id @default(uuid())
+  email    String  @unique
+  name     String  @default("Anonymous")
   password String?
-  googleId String? @unique 
   avatar   String?
-  bio      String @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
-  posts    Post[]
+  googleId String? @unique
+  bio      String  @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
   likes    Like[]
+  posts    Post[]
 }
 
 model Post {
   id        String   @id @default(uuid())
   title     String
+  titleImage        String? 
   content   String
   published Boolean  @default(false)
-  date      DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
+  isDraft           Boolean  @default(true)       
+  isAIGenerated     Boolean  @default(false)                            
+  labels            String[]                      
+  harmfulContent    Boolean  @default(false)      
+  harmfulScore      Float?                         
   authorId  String
+  date      DateTime @default(now())
   likes     Like[]
+  author    User     @relation(fields: [authorId], references: [id])
 }
 
 model Like {
@@ -41,9 +41,8 @@ model Like {
   userId    String
   postId    String
   createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id])
   post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
-  @@unique([userId, postId]) // Ensure a user can only like a post once
+  @@unique([userId, postId])
 }

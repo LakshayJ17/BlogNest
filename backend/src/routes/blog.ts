@@ -3,11 +3,13 @@ import { withAccelerate } from '@prisma/extension-accelerate'
 import { Hono } from 'hono'
 import { verify } from 'hono/jwt'
 import { createBlogInput, updateBlogInput } from '@lakshayj17/common-app'
+import OpenAI from "openai";
 
 export const blogRouter = new Hono<{
     Bindings: {
         DATABASE_URL: string,
         JWT_SECRET: string,
+        OPENAI_API_KEY: string,
     },
     Variables: {
         userId: string
@@ -26,7 +28,7 @@ blogRouter.use('/*', async (c, next) => {
         c.status(401);
         return c.json({ error: "unauthorized" });
     }
-    c.set('userId', (payload as {id: string}).id);
+    c.set('userId', (payload as { id: string }).id);
     await next()
 });
 
@@ -106,7 +108,7 @@ blogRouter.get('/bulk', async (c) => {
             },
             _count: {
                 select: {
-                    likes: true, 
+                    likes: true,
                 },
             },
         }
@@ -144,7 +146,7 @@ blogRouter.get('/:id', async (c) => {
                 },
                 _count: {
                     select: {
-                        likes: true, 
+                        likes: true,
                     },
                 },
             }
@@ -250,6 +252,40 @@ blogRouter.get('/:id/liked', async (c) => {
         return c.json({ error: "Could not check like status" });
     }
 });
+
+blogRouter.post('/ai-post', async (c) => {
+    const body = await c.req.json();
+    const { title } = body;
+
+    if (!title) {
+        c.status(400);
+        return c.json({ error: "Title not found" })
+    }
+
+    const client = new OpenAI({
+        apiKey: c.env.OPENAI_API_KEY
+    });
+
+    const SYSTEM_PROMPT = `You are an expert blog writer. Write a well-structured, engaging and informative article on the topic : "${title}". 
+    Return only plain text, without any code or technical snippets. 
+    xIf the topic is harmful, unsafe, or inappropriate, do not generate the article and return an error message instead.`
+
+    try {
+        const response = await client.responses.create({
+            model: "gpt-5",
+            input: SYSTEM_PROMPT
+        });
+
+        return c.json({
+            content: response.output_text
+
+        })
+    } catch (error) {
+        console.log("Error in generating content : ", error)
+        c.status(400)
+        return c.json({ error: "Error generating content" })
+    }
+})
 
 
 
