@@ -134,7 +134,7 @@ function TextEditor({
       </div>
 
       <Editor
-        apiKey="m416ck6b5y34mnh560253wk4aes8289sf1bwd4ucysit9n0y"
+        apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
         onEditorChange={onChange}
         value={value}
         id="editor"
