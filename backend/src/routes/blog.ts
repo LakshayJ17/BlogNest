@@ -266,7 +266,7 @@ blogRouter.post('/ai-post', async (c) => {
         apiKey: c.env.OPENAI_API_KEY
     });
 
-const SYSTEM_PROMPT = `You are an expert blog writer.
+    const SYSTEM_PROMPT = `You are an expert blog writer.
 Write a well-structured, engaging, and informative blog article on the topic: "${title}".
 Return the article in valid HTML format, using headings (<h2>, <h3>), paragraphs (<p>), and lists (<ul>, <ol>) where appropriate.
 Do not include any code blocks.
@@ -285,6 +285,44 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
         console.log("Error in generating content : ", error)
         c.status(400)
         return c.json({ error: "Error generating content" })
+    }
+})
+
+blogRouter.post('/ai-summary', async (c) => {
+    const body = await c.req.json();
+    const { content } = body;
+
+    if (!content) {
+        c.status(400)
+        return c.json({ error: "Content not found" })
+    }
+
+    const client = new OpenAI({
+        apiKey: c.env.OPENAI_API_KEY
+    });
+
+    const SYSTEM_PROMPT = `You are an expert blog summarizer.
+Summarize the following article content in 5-7 sentences, focusing only on the most important points, facts, and statistics. Be brief but clear.
+Return the summary in plain text, without any code blocks.
+If the topic is illegal, violent, or clearly unsafe, do not generate the summary and return an error message instead. Otherwise, always generate the summary.
+
+Article content:
+${content}
+`;
+
+    try {
+        const response = await client.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "system", content: SYSTEM_PROMPT }]
+        });
+
+        return c.json({
+            summary: response.choices[0].message.content
+        })
+    } catch (error) {
+        console.log("Error in summarising content : ", error)
+        c.status(400)
+        return c.json({ error: "Error summarising content" })
     }
 })
 
