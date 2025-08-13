@@ -32,6 +32,7 @@ export const Blogs = () => {
                             content={blog.content}
                             publishedDate={blog.date}
                             _count={blog._count}
+                            labels={blog.labels}
                         />
                     ))}
                 </div>

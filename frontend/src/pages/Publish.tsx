@@ -26,7 +26,7 @@ export const Publish = () => {
   const [loading, setLoading] = useState(false);
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
-
+  const [isAIGenerated, setIsAIGenerated] = useState(false)
   const navigate = useNavigate();
 
   const { token } = useAuthStore();
@@ -39,6 +39,10 @@ export const Publish = () => {
     return <Unauthorized />;
   }
 
+  const labelsToSend = isAIGenerated
+    ? Array.from(new Set([...selectedLabels, "AI Generated"]))
+    : selectedLabels;
+
   const handlePublish = async () => {
     if (!title || !content) {
       notifyWarn();
@@ -49,7 +53,7 @@ export const Publish = () => {
     try {
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/blog`,
-        { title, content },
+        { title, content, labels: labelsToSend },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -84,6 +88,7 @@ export const Publish = () => {
       );
       setLoading(false);
       setContent(response.data.content);
+      setIsAIGenerated(true)
     } catch (error) {
       console.log("Error generating content : ", error);
       toast.error("Error generating ai content");
@@ -125,6 +130,12 @@ export const Publish = () => {
             </div>
 
             <div className="flex flex-wrap gap-2 py-2">
+              {isAIGenerated && (
+              <span className="bg-blue-100 border border-blue-400 text-blue-700 font-semibold py-1 px-3 rounded-full flex items-center gap-1 text-sm select-none">
+                <Sparkle size={16} className="text-blue-500" />
+                AI Generated
+              </span>
+            )}
               {labels.map((label) => {
                 const isSelected = selectedLabels.includes(label);
                 const isHovered = hoveredLabel === label;
@@ -137,6 +148,7 @@ export const Publish = () => {
                     className={`bg-neutral-100 border border-neutral-200 shadow-md py-1 px-3 rounded-full flex items-center gap-1 text-sm cursor-pointer transition
                       ${isSelected ? "bg-green-100 border-green-400" : "hover:bg-neutral-200"}`}
                   >
+                    
                     {isSelected ? (
                       isHovered ? (
                         <XCircle size={16} className="text-red-500" />
@@ -148,12 +160,12 @@ export const Publish = () => {
                     )}
                     {label}
                   </span>
+                  
                 );
               })}
             </div>
 
             <TextEditor value={content} onChange={setContent} />
-
             <button
               type="button"
               className="cursor-pointer min-w-[150px] inline-flex items-center justify-center px-6 py-2 text-base font-semibold text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"

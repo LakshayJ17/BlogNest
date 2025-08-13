@@ -51,6 +51,7 @@ blogRouter.post('/', async (c) => {
             title: body.title,
             content: body.content,
             authorId: userId,
+            labels: body.labels,
         }
     });
 
@@ -106,6 +107,7 @@ blogRouter.get('/bulk', async (c) => {
                     bio: true,
                 }
             },
+            labels: true,
             _count: {
                 select: {
                     likes: true,
@@ -144,6 +146,7 @@ blogRouter.get('/:id', async (c) => {
                         bio: true
                     }
                 },
+                labels: true,
                 _count: {
                     select: {
                         likes: true,

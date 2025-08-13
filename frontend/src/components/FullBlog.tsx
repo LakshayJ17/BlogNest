@@ -1,4 +1,4 @@
-import { FileText, XCircle } from "lucide-react";
+import { FileText, XCircle, Sparkle } from "lucide-react";
 import { Blog } from "../hooks";
 import { useLike } from "../hooks/useLike";
 import { Appbar } from "./Appbar";
@@ -52,6 +52,28 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                         <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold">
                             {blog.title}
                         </div>
+
+                        <div className="flex flex-wrap gap-2 py-2">
+                            {Array.isArray(blog.labels) &&
+                                blog.labels.map((label) =>
+                                    label === "AI Generated" ? (
+                                        <span
+                                            key={label}
+                                            className="bg-blue-100 border border-blue-400 text-blue-700 font-semibold py-1 px-3 rounded-full flex items-center gap-1 text-xs select-none"
+                                        >
+                                            <Sparkle size={15} className="text-blue-500" />
+                                            {label}
+                                        </span>
+                                    ) : (
+                                        <span
+                                            key={label}
+                                            className="bg-neutral-100 border border-neutral-200 text-gray-700 py-1 px-3 rounded-full flex items-center gap-1 text-xs"
+                                        >
+                                            {label}
+                                        </span>
+                                    )
+                                )}
+                        </div>
                         <div className="pt-6">
                             <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
                         </div>
@@ -93,7 +115,9 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                                 layoutId="hover"
                             >
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="font-semibold text-gray-700">AI Generated Summary</p>
+                                    <p className="font-semibold text-gray-700">
+                                        AI Generated Summary
+                                    </p>
                                     <XCircle
                                         onClick={() => setHovered(false)}
                                         className="cursor-pointer text-gray-400 hover:text-red-500 transition-colors"

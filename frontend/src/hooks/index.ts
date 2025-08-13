@@ -14,6 +14,7 @@ export interface Blog {
         "avatar"?:string;
         "bio": string;
     };
+    "labels": string[];
     "_count": {
         "likes": number;
     };
