@@ -100,7 +100,7 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                                         size={22}
                                     />
                                 </div>
-                                <div className="text-gray-800 text-sm whitespace-pre-line">
+                                <div className="flex justify-center text-gray-800 text-sm whitespace-pre-line">
                                     {loading ? <Spinner size="big" /> : summary}
                                 </div>
                             </motion.div>

@@ -8,13 +8,25 @@ import { Spinner } from "../components/Spinner";
 import { BackButton } from "../components/BackButton";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
-import { Sparkle } from "lucide-react";
+import { PlusCircle, Sparkle, CheckCircle, XCircle } from "lucide-react";
 import { Editor } from "@tinymce/tinymce-react";
+
+const labels = [
+  "Technology",
+  "Music",
+  "Sports",
+  "Space",
+  "Entertainment",
+  "Hobby",
+];
 
 export const Publish = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   const { token } = useAuthStore();
@@ -60,7 +72,7 @@ export const Publish = () => {
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/blog/ai-post`,
         { title },
@@ -70,12 +82,20 @@ export const Publish = () => {
           },
         }
       );
-      setLoading(false)
+      setLoading(false);
       setContent(response.data.content);
     } catch (error) {
       console.log("Error generating content : ", error);
       toast.error("Error generating ai content");
     }
+  };
+
+  const toggleLabel = (label: string) => {
+    setSelectedLabels((prev) =>
+      prev.includes(label)
+        ? prev.filter((l) => l !== label)
+        : [...prev, label]
+    );
   };
 
   return (
@@ -101,9 +121,37 @@ export const Publish = () => {
                 title="Generate AI Content"
               >
                 {loading ? <Spinner size="small" /> : <Sparkle />}
-                
               </button>
             </div>
+
+            <div className="flex flex-wrap gap-2 py-2">
+              {labels.map((label) => {
+                const isSelected = selectedLabels.includes(label);
+                const isHovered = hoveredLabel === label;
+                return (
+                  <span
+                    key={label}
+                    onClick={() => toggleLabel(label)}
+                    onMouseEnter={() => setHoveredLabel(label)}
+                    onMouseLeave={() => setHoveredLabel(null)}
+                    className={`bg-neutral-100 border border-neutral-200 shadow-md py-1 px-3 rounded-full flex items-center gap-1 text-sm cursor-pointer transition
+                      ${isSelected ? "bg-green-100 border-green-400" : "hover:bg-neutral-200"}`}
+                  >
+                    {isSelected ? (
+                      isHovered ? (
+                        <XCircle size={16} className="text-red-500" />
+                      ) : (
+                        <CheckCircle size={16} className="text-green-500" />
+                      )
+                    ) : (
+                      <PlusCircle size={16} />
+                    )}
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+
             <TextEditor value={content} onChange={setContent} />
 
             <button
@@ -133,7 +181,7 @@ function TextEditor({
       <div className="px-4 py-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
         <label htmlFor="editor" className="text-sm font-medium text-gray-700">
           Write your article
-        </label> 
+        </label>
       </div>
 
       <Editor
