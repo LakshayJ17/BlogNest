@@ -16,7 +16,8 @@ export const blogRouter = new Hono<{
     }
 }>();
 
-blogRouter.use('/*', async (c, next) => {
+
+async function requireAuth(c : any, next : any) {
     const jwt = c.req.header('Authorization');
     if (!jwt) {
         c.status(401);
@@ -29,10 +30,11 @@ blogRouter.use('/*', async (c, next) => {
         return c.json({ error: "unauthorized" });
     }
     c.set('userId', (payload as { id: string }).id);
-    await next()
-});
+    return next()
+}
 
-blogRouter.post('/', async (c) => {
+// Post blog
+blogRouter.post('/',requireAuth, async (c) => {
     const userId = c.get('userId');
 
     const body = await c.req.json();
@@ -60,7 +62,8 @@ blogRouter.post('/', async (c) => {
     });
 })
 
-blogRouter.put('/', async (c) => {
+// Update blog content
+blogRouter.put('/',requireAuth, async (c) => {
     const userId = c.get('userId');
 
     const body = await c.req.json();
@@ -88,6 +91,7 @@ blogRouter.put('/', async (c) => {
     return c.text('updated post');
 })
 
+// Get all blogs 
 blogRouter.get('/bulk', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
@@ -121,6 +125,7 @@ blogRouter.get('/bulk', async (c) => {
     });
 })
 
+// Get particular blog by id 
 blogRouter.get('/:id', async (c) => {
     const id = c.req.param('id');
 
@@ -166,7 +171,7 @@ blogRouter.get('/:id', async (c) => {
 })
 
 // Like / unlike the post
-blogRouter.post('/:id/like', async (c) => {
+blogRouter.post('/:id/like',requireAuth, async (c) => {
     const userId = c.get('userId')
     const postId = c.req.param('id')
 
@@ -210,26 +215,7 @@ blogRouter.post('/:id/like', async (c) => {
     }
 })
 
-// Get likes count
-// blogRouter.get('/:id/likes', async (c) => {
-//     const postId = c.req.param('id');
-
-//     const prisma = new PrismaClient({
-//         datasourceUrl: c.env?.DATABASE_URL,
-//     }).$extends(withAccelerate());
-
-//     try {
-//         const count = await prisma.like.count({
-//             where: { postId }
-//         });
-//         return c.json({ count });
-//     } catch (e) {
-//         console.error("Error fetching like count:", e);
-//         c.status(500);
-//         return c.json({ error: "Could not fetch like count" });
-//     }
-// });
-
+// Check if post is liked or not 
 blogRouter.get('/:id/liked', async (c) => {
     const userId = c.get('userId');
     const postId = c.req.param('id');
@@ -256,7 +242,8 @@ blogRouter.get('/:id/liked', async (c) => {
     }
 });
 
-blogRouter.post('/ai-post', async (c) => {
+// Make ai post
+blogRouter.post('/ai-post',requireAuth, async (c) => {
     const body = await c.req.json();
     const { title } = body;
 
@@ -291,7 +278,8 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
     }
 })
 
-blogRouter.post('/ai-summary', async (c) => {
+// Get ai summary
+blogRouter.post('/ai-summary',requireAuth, async (c) => {
     const body = await c.req.json();
     const { content } = body;
 

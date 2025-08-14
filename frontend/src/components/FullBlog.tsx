@@ -13,6 +13,7 @@ import { BACKEND_URL } from "../config";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
 import { Spinner } from "./Spinner";
+import { ShareMenu } from "./ShareMenu";
 
 export const FullBlog = ({ blog }: { blog: Blog }) => {
     const { token } = useAuthStore();
@@ -43,14 +44,19 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
             return;
         }
     };
+
     return (
         <div className="w-full">
             <Appbar navigateTo="/blogs" label={<BackButton />} />
             <div className="flex justify-center px-4 py-6 w-full">
                 <div className="grid grid-cols-1 space-x-10 lg:grid-cols-12 max-w-7xl">
                     <div className="lg:col-span-8">
-                        <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold">
-                            {blog.title}
+                        <div className="flex justify-between items-center">
+                            <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold pb-5">
+                                {blog.title}
+                            </div>
+
+                            <ShareMenu url={window.location.href} title={blog.title} />
                         </div>
 
                         <div className="flex flex-wrap gap-2 py-2">
