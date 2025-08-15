@@ -6,7 +6,7 @@ import { BACKEND_URL } from "../config";
 import { Spinner } from "./Spinner";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, InfoIcon } from "lucide-react";
 import { BackButton } from "./BackButton";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
@@ -79,8 +79,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 pt-10">
         <Link to="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
           <BackButton />
         </Link>
@@ -146,6 +146,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             showPassword={showPassword}
             setShowPassword={setShowPassword}
           />
+
+          {type === "signup" ? <p className="text-xs tracking-tight flex gap-2 items-start text-gray-700"><InfoIcon className="pt-1" size={14} />Password must be at least 6 characters and include 1 lowercase, 1 uppercase, 1 number, and 1 special character.</p>: "" }
 
           <button
             type="submit"

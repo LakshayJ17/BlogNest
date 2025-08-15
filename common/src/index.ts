@@ -1,8 +1,13 @@
 import z from "zod";
 
 export const signupInput = z.object({
-    email : z.string().email(),
-    password: z.string().min(6),
+    email: z.string().email(),
+    password: z.string()
+        .min(6)
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/,
+            "Password must contain at least 1 lowercase, 1 uppercase, 1 number, 1 special character, and be at least 6 characters long"
+        ),
     name: z.string().optional(),
 })
 

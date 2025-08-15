@@ -1,6 +1,6 @@
 {
   "name": "@lakshayj17/common-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Common middlewares and validation schemas for my app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
