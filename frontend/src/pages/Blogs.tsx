@@ -1,9 +1,14 @@
+// import { useState } from "react";
 import { Appbar } from "../components/Appbar";
 import { BlogCard } from "../components/BlogCard";
 import { BlogSkeleton } from "../components/BlogSkeleton";
 import { useBlogs } from "../hooks";
+// import axios from "axios";
+// import { BACKEND_URL } from "../config";
 
 export const Blogs = () => {
+    // const [search, setSearch] = useState("");
+    // const [label, setLabel] = useState("");
     const { loading, blogs } = useBlogs();
 
     if (loading) {
@@ -18,9 +23,35 @@ export const Blogs = () => {
         );
     }
 
+    // const searchBlogs = async () => {
+    //     const params = new URLSearchParams();
+    //     if (search) params.append("q", search);
+    //     if (label) params.append("label", label);
+
+    //     const res = await axios.get(
+    //         `${BACKEND_URL}/api/v1/blog/bulk?${params.toString()}`
+    //     );
+    // };
+
     return (
         <div className="min-h-screen overflow-x-hidden">
             <Appbar navigateTo="/blogs" label="BlogNest" />
+            {/* <div className="flex justify-center items-center gap-10">
+                <input
+                    type="text"
+                    value={search}
+                    placeholder="Search Blogs"
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+
+                <select value={label} onChange={(e) => setLabel(e.target.value)}>
+                    <option value="">All Labels</option>
+                    <option value="AI Generated">AI Generated</option>
+                </select>
+
+                <button onClick={searchBlogs}>Search</button>
+            </div> */}
+
             <div className="flex justify-center px-4 md:px-10 py-6">
                 <div className="w-full max-w-screen-md flex flex-col gap-6">
                     {blogs.map((blog) => (

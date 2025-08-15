@@ -147,7 +147,15 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
             setShowPassword={setShowPassword}
           />
 
-          {type === "signup" ? <p className="text-xs tracking-tight flex gap-2 items-start text-gray-700"><InfoIcon className="pt-1" size={14} />Password must be at least 6 characters and include 1 lowercase, 1 uppercase, 1 number, and 1 special character.</p>: "" }
+          {type === "signup" ? (
+            <p className="text-xs tracking-tight flex gap-2 items-start text-gray-700">
+              <InfoIcon className="pt-1" size={14} />
+              Password must be at least 6 characters and include 1 lowercase, 1
+              uppercase, 1 number, and 1 special character.
+            </p>
+          ) : (
+            ""
+          )}
 
           <button
             type="submit"
@@ -207,7 +215,7 @@ function LabeledInput({
   onChange,
   type,
   showPassword,
-  setShowPassword
+  setShowPassword,
 }: LabeledInputType) {
   const isPasswordField = type === "password";
 
@@ -227,7 +235,7 @@ function LabeledInput({
         {isPasswordField && setShowPassword && (
           <button
             type="button"
-            onMouseDown={e => e.preventDefault()}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setShowPassword && setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer z-10"
           >

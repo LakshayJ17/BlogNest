@@ -8,7 +8,6 @@ import { LikeButton } from "./LikeButton";
 import { PostedDate } from "./PostedDate";
 import { motion } from "motion/react";
 import { useState } from "react";
-import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
@@ -24,24 +23,34 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
 
     const generateSummary = async () => {
         setLoading(true);
+        setSummary("")
         try {
-            const response = await axios.post(
-                `${BACKEND_URL}/api/v1/blog/ai-summary`,
-                {
-                    content: blog.content,
+            const response = await fetch(`${BACKEND_URL}/api/v1/blog/ai-summary`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
                 },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+                body: JSON.stringify({ content: blog.content })
+            })
+
+            if (!response.body) throw new Error("No response body")
+
+            const reader = response.body.getReader();
+            let result = "";
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                result += decoder.decode(value);
+                setSummary(result); 
+            }
             setLoading(false);
-            setSummary(response.data.summary);
         } catch (error) {
+            setLoading(false)
             toast.error("Error generating summary");
             console.log("Error generating summary : ", error);
-            return;
         }
     };
 

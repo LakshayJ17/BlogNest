@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { verify } from 'hono/jwt'
 import { createBlogInput, updateBlogInput } from '@lakshayj17/common-app'
 import OpenAI from "openai";
+import { streamText } from "hono/streaming";
 
 export const blogRouter = new Hono<{
     Bindings: {
@@ -97,6 +98,20 @@ blogRouter.get('/bulk', async (c) => {
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
 
+    const q = c.req.query('q') || '';
+    const label = c.req.query('label');
+
+    const where: any = {};
+
+    if (q) {
+        where.OR = [
+            { title: { contains: q, mode: 'insensitive' } },
+            { content: { contains: q, mode: 'insensitive' } }
+        ]
+    }
+    if (label) {
+        where.labels = { has: label }
+    }
     const posts = await prisma.post.findMany({
         select: {
             content: true,
@@ -280,6 +295,8 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
 
 // Get ai summary
 blogRouter.post('/ai-summary', requireAuth, async (c) => {
+    c.header('Content-Encoding', 'identity'); 
+
     const body = await c.req.json();
     const { content } = body;
 
@@ -301,21 +318,34 @@ Article content:
 ${content}
 `;
 
-    try {
+    // try {
+    //     const response = await client.chat.completions.create({
+    //         model: "gpt-3.5-turbo",
+    //         messages: [{ role: "system", content: SYSTEM_PROMPT }]
+    //     });
+
+    //     return c.json({
+    //         summary: response.choices[0].message.content
+    //     })
+    // } catch (error) {
+    //     console.log("Error in summarising content : ", error)
+    //     c.status(400)
+    //     return c.json({ error: "Error summarising content" })
+    // }
+
+    return streamText(c, async (stream) => {
         const response = await client.chat.completions.create({
             model: "gpt-3.5-turbo",
+            stream: true,
             messages: [{ role: "system", content: SYSTEM_PROMPT }]
         });
 
-        return c.json({
-            summary: response.choices[0].message.content
-        })
-    } catch (error) {
-        console.log("Error in summarising content : ", error)
-        c.status(400)
-        return c.json({ error: "Error summarising content" })
-    }
-})
+        for await (const chunk of response) {
+            const text = chunk.choices?.[0]?.delta?.content;
+            if (text) await stream.write(text);
+        }
+    });
+});
 
 
 
