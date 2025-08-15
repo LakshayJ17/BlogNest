@@ -4,6 +4,8 @@ import { Hono } from "hono";
 import { sign, verify } from "hono/jwt";
 import { signupInput, signinInput } from "@lakshayj17/common-app";
 
+import bcrypt from 'bcryptjs';
+
 export const userRouter = new Hono<{
     Bindings: {
         DATABASE_URL: string;
@@ -14,25 +16,39 @@ export const userRouter = new Hono<{
 userRouter.post("/signup", async (c) => {
     // c -> context
     // zod validation
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
 
     const body = await c.req.json();
     const { success } = signupInput.safeParse(body);
 
     if (!success) {
         c.status(400);
-        return c.json({ error: "Invalid input" });
+        return c.json({ error: "Invalid email or password"});
     }
 
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
 
+    const hashedPassword = await bcrypt.hash(body.password, salt);
+
     try {
+        const existingUser = await prisma.user.findUnique({
+            where:{
+                email : body.email
+            }
+        })
+        if (existingUser){
+            c.status(409);
+            return c.json({error : "Email already exits"})
+        }
+
         const user = await prisma.user.create({
             data: {
-                email: body.email,
-                password: body.password,
                 name: body.name || "Anonymous",
+                email: body.email,
+                hashedPassword: hashedPassword
             },
         });
 
@@ -60,14 +76,22 @@ userRouter.post("/signin", async (c) => {
     try {
         const user = await prisma.user.findUnique({
             where: {
-                email: body.email,
-                password: body.password,
+                email: body.email
             },
         });
 
         if (!user) {
             c.status(403);
-            return c.json({ error: "user not found" });
+            return c.json({ error: "User not found"});
+        }
+        if (!user.hashedPassword) {
+            c.status(400);
+            return c.json({ error: "User does not have a password set" });
+        }
+        const passwordMatches = await bcrypt.compare(body.password, user.hashedPassword);
+        if (!passwordMatches) {
+            c.status(403);
+            return c.json({ error: "Invalid password" });
         }
         const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
         return c.json({ jwt });

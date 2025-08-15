@@ -17,7 +17,7 @@ export const blogRouter = new Hono<{
 }>();
 
 
-async function requireAuth(c : any, next : any) {
+async function requireAuth(c: any, next: any) {
     const jwt = c.req.header('Authorization');
     if (!jwt) {
         c.status(401);
@@ -34,7 +34,7 @@ async function requireAuth(c : any, next : any) {
 }
 
 // Post blog
-blogRouter.post('/',requireAuth, async (c) => {
+blogRouter.post('/', requireAuth, async (c) => {
     const userId = c.get('userId');
 
     const body = await c.req.json();
@@ -63,7 +63,7 @@ blogRouter.post('/',requireAuth, async (c) => {
 })
 
 // Update blog content
-blogRouter.put('/',requireAuth, async (c) => {
+blogRouter.put('/', requireAuth, async (c) => {
     const userId = c.get('userId');
 
     const body = await c.req.json();
@@ -171,7 +171,7 @@ blogRouter.get('/:id', async (c) => {
 })
 
 // Like / unlike the post
-blogRouter.post('/:id/like',requireAuth, async (c) => {
+blogRouter.post('/:id/like', requireAuth, async (c) => {
     const userId = c.get('userId')
     const postId = c.req.param('id')
 
@@ -216,7 +216,7 @@ blogRouter.post('/:id/like',requireAuth, async (c) => {
 })
 
 // Check if post is liked or not 
-blogRouter.get('/:id/liked', async (c) => {
+blogRouter.get('/:id/liked', requireAuth, async (c) => {
     const userId = c.get('userId');
     const postId = c.req.param('id');
 
@@ -243,7 +243,7 @@ blogRouter.get('/:id/liked', async (c) => {
 });
 
 // Make ai post
-blogRouter.post('/ai-post',requireAuth, async (c) => {
+blogRouter.post('/ai-post', requireAuth, async (c) => {
     const body = await c.req.json();
     const { title } = body;
 
@@ -279,7 +279,7 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
 })
 
 // Get ai summary
-blogRouter.post('/ai-summary',requireAuth, async (c) => {
+blogRouter.post('/ai-summary', requireAuth, async (c) => {
     const body = await c.req.json();
     const { content } = body;
 

@@ -20,6 +20,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -38,9 +40,12 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
       setToken(jwt);
 
       navigate("/blogs");
-    } catch (error) {
-      notify();
-
+    } catch (error: any) {
+      let errorMsg = "Error while signing up";
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      }
+      toast.error(errorMsg);
       console.log(error);
     } finally {
       setLoading(false);
@@ -76,9 +81,9 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
+        <Link to="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
           <BackButton />
-        </div>
+        </Link>
 
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
@@ -138,6 +143,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                 password: e.target.value,
               });
             }}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
           />
 
           <button
@@ -188,6 +195,8 @@ interface LabeledInputType {
   placeholder: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   type?: string;
+  showPassword?: boolean;
+  setShowPassword?: (show: boolean) => void;
 }
 
 function LabeledInput({
@@ -195,8 +204,9 @@ function LabeledInput({
   placeholder,
   onChange,
   type,
+  showPassword,
+  setShowPassword
 }: LabeledInputType) {
-  const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === "password";
 
   return (
@@ -212,11 +222,12 @@ function LabeledInput({
           placeholder={placeholder}
           required
         />
-        {isPasswordField && (
+        {isPasswordField && setShowPassword && (
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => setShowPassword && setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer z-10"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>

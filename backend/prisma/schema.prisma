@@ -11,7 +11,7 @@ model User {
   id       String  @id @default(uuid())
   email    String  @unique
   name     String  @default("Anonymous")
-  password String?
+  hashedPassword String?
   avatar   String?
   googleId String? @unique
   bio      String  @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
