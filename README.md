@@ -8,60 +8,18 @@
 
 ## 🛠️ Tech Stack
 
-### Frontend (`/frontend`)
-- **React** – Modern UI framework
-- **Vite** – Fast build tool
-- **Tailwind CSS** – Utility-first CSS framework
-- **React Router** – Client-side navigation
-- **Axios** – API handling
-- **TypeScript** – Type safety
+### Frontend  
+- **React** – Modern UI framework  
+- **Vite** – Fast build tool  
+- **Tailwind CSS** – Utility-first CSS framework  
+- **React Router** – Client-side navigation  
+- **Axios** – API handling  
 
-### Backend (`/backend`)
-- **Express.js** – Fast, unopinionated Node.js web framework
-- **Prisma ORM** – Type-safe database ORM for PostgreSQL
-- **Zod** – Schema validation for API inputs
-- **JWT** – Secure authentication
-- **bcryptjs** – Password hashing
-- **OpenAI** – AI-powered blog generation and summarization
-- **dotenv** – Environment variable management
-- **CORS** – Cross-origin resource sharing
-
-### Shared (`/common`)
-- **TypeScript** – Shared types and validation schemas
-
----
-
-## 📦 Folder Structure
-
-```
-medium/
-│
-├── backend/      # Express API, Prisma, routes, migrations
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── routes/
-│   │       ├── user.ts
-│   │       └── blog.ts
-│   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── migrations/
-│   ├── .env
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── frontend/     # React app (Vite, Tailwind, etc.)
-│   ├── src/
-│   ├── public/
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── common/       # Shared types and validation logic
-│   ├── src/
-│   ├── package.json
-│   └── tsconfig.json
-│
-└── README.md
-```
+### Backend  
+- **Hono** – Lightweight web framework  
+- **Prisma** – ORM for PostgreSQL  
+- **Cloudflare Workers** – Serverless deployment  
+- **Zod** – Schema validation  
 
 ---
 

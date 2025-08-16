@@ -1,105 +1,109 @@
-import { PrismaClient } from '@prisma/client/edge'
-import { withAccelerate } from '@prisma/extension-accelerate'
-import { Hono } from 'hono'
-import { verify } from 'hono/jwt'
+import express from "express";
+import { PrismaClient } from '@prisma/client'
 import { createBlogInput, updateBlogInput } from '@lakshayj17/common-app'
 import OpenAI from "openai";
-import { streamText } from "hono/streaming";
+import { Request, Response, NextFunction } from "express";
+import jwt from 'jsonwebtoken'
 
-export const blogRouter = new Hono<{
-    Bindings: {
-        DATABASE_URL: string,
-        JWT_SECRET: string,
-        OPENAI_API_KEY: string,
-    },
-    Variables: {
-        userId: string
-    }
-}>();
+export const blogRouter = express.Router();
 
+const prisma = new PrismaClient();
 
-async function requireAuth(c: any, next: any) {
-    const jwt = c.req.header('Authorization');
-    if (!jwt) {
-        c.status(401);
-        return c.json({ error: "unauthorized" });
+const JWT_SECRET = process.env.JWT_SECRET as string;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
+
+interface AuthRequest extends Request {
+    userId?: string;
+}
+
+async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+    const authHeader = req.headers['authorization'];
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
     }
-    const token = jwt.split(' ')[1];
-    const payload = await verify(token, c.env.JWT_SECRET);
-    if (!payload) {
-        c.status(401);
-        return c.json({ error: "unauthorized" });
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const payload = jwt.verify(token, JWT_SECRET) as { id: string };
+        req.userId = payload.id;
+        return next()
+    } catch (err) {
+        return res.status(401).json({ error: "Invalid or expired token" });
     }
-    c.set('userId', (payload as { id: string }).id);
-    return next()
 }
 
 // Post blog
-blogRouter.post('/', requireAuth, async (c) => {
-    const userId = c.get('userId');
-
-    const body = await c.req.json();
-    const { success } = createBlogInput.safeParse(body);
-    if (!success) {
-        c.status(400);
-        return c.json({ error: "Invalid input" });
+blogRouter.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+    const body = req.body;
+    const { success } = createBlogInput.safeParse(body);
+    if (!success) {
+        res.status(400);
+        return res.json({ error: "Invalid input" });
+    }
 
-    const post = await prisma.post.create({
-        data: {
-            title: body.title,
-            content: body.content,
-            authorId: userId,
-            labels: body.labels,
-        }
-    });
+    try {
+        const post = await prisma.post.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                authorId: userId,
+                labels: body.labels,
+            }
+        });
 
-    return c.json({
-        id: post.id
-    });
+        return res.json({
+            id: post.id
+        });
+    } catch (error) {
+        res.status(400).json({ error: "Error creating post" })
+    }
+
 })
 
 // Update blog content
-blogRouter.put('/', requireAuth, async (c) => {
-    const userId = c.get('userId');
-
-    const body = await c.req.json();
-    const { success } = updateBlogInput.safeParse(body);
-    if (!success) {
-        c.status(400);
-        return c.json({ error: "Invalid input" });
+blogRouter.put('/', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+    const body = req.body;
+    const { success } = updateBlogInput.safeParse(body);
+    if (!success) {
+        res.status(400);
+        return res.json({ error: "Invalid input" });
+    }
 
-    prisma.post.update({
-        where: {
-            id: body.id,
-            authorId: userId,
-        },
-        data: {
-            title: body.title,
-            content: body.content
-        }
-    });
+    try {
+        prisma.post.update({
+            where: {
+                id: body.id,
+                authorId: userId,
+            },
+            data: {
+                title: body.title,
+                content: body.content
+            }
+        });
 
-    return c.text('updated post');
+        return res.send('updated post');
+    } catch (error) {
+        return res.status(400).json({ error: "Error updating post" })
+    }
+
 })
 
 // Get all blogs 
-blogRouter.get('/bulk', async (c) => {
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
-
-    const q = c.req.query('q') || '';
-    const label = c.req.query('label');
+blogRouter.get('/bulk', async (req: Request, res: Response) => {
+    const q = req.query.q as string || ""
+    const label = req.query.label as string;
 
     const where: any = {};
 
@@ -112,47 +116,47 @@ blogRouter.get('/bulk', async (c) => {
     if (label) {
         where.labels = { has: label }
     }
-    const posts = await prisma.post.findMany({
-        select: {
-            content: true,
-            title: true,
-            id: true,
-            date: true,
-            author: {
-                select: {
-                    name: true,
-                    googleId: true,
-                    avatar: true,
-                    bio: true,
-                }
-            },
-            labels: true,
-            _count: {
-                select: {
-                    likes: true,
-                },
-            },
-        }
-    });
 
-    return c.json({
-        posts
-    });
+    try {
+        const posts = await prisma.post.findMany({
+            select: {
+                content: true,
+                title: true,
+                id: true,
+                date: true,
+                author: {
+                    select: {
+                        name: true,
+                        googleId: true,
+                        avatar: true,
+                        bio: true,
+                    }
+                },
+                labels: true,
+                _count: {
+                    select: {
+                        likes: true,
+                    },
+                },
+            }
+        });
+
+        return res.json({
+            posts
+        });
+    } catch (error) {
+        return res.status(400).json({ error: "Error fetching posts" });
+    }
+
 })
 
 // Get particular blog by id 
-blogRouter.get('/:id', async (c) => {
-    const id = c.req.param('id');
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+blogRouter.get('/:id', async (req: Request, res: Response) => {
+    const id = req.params.id;
 
     try {
         const post = await prisma.post.findUnique({
-            where: {
-                id: id
-            },
+            where: { id },
             select: {
                 id: true,
                 title: true,
@@ -175,24 +179,22 @@ blogRouter.get('/:id', async (c) => {
             }
         })
         if (!post) {
-            c.status(404)
-            return c.json({ error: "Post not found" })
+            res.status(404).json({ error: "Post not found" })
         }
-        return c.json({ post })
+        return res.json({ post })
     } catch (e) {
-        console.log(e)
-        return c.json({ error: "Post not found" })
+        return res.status(400).json({ error: "Post not found" })
     }
 })
 
 // Like / unlike the post
-blogRouter.post('/:id/like', requireAuth, async (c) => {
-    const userId = c.get('userId')
-    const postId = c.req.param('id')
+blogRouter.post('/:id/like', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+    const postId = req.params.id
 
     try {
         const existing = await prisma.like.findUnique({
@@ -213,7 +215,7 @@ blogRouter.post('/:id/like', requireAuth, async (c) => {
                     }
                 }
             })
-            return c.json({ liked: false })
+            return res.json({ liked: false })
         } else {
             await prisma.like.create({
                 data: {
@@ -221,23 +223,21 @@ blogRouter.post('/:id/like', requireAuth, async (c) => {
                     postId: postId
                 }
             })
-            return c.json({ liked: true })
+            return res.json({ liked: true })
         }
     } catch (e) {
-        console.error("Error toggling like:", e);
-        c.status(500);
-        return c.json({ error: "Could not toggle like" });
+        return res.status(500).json({ error: "Could not toggle like" });
     }
 })
 
 // Check if post is liked or not 
-blogRouter.get('/:id/liked', requireAuth, async (c) => {
-    const userId = c.get('userId');
-    const postId = c.req.param('id');
+blogRouter.get('/:id/liked', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
+    const postId = req.params.id;
 
     try {
         const liked = await prisma.like.findUnique({
@@ -249,26 +249,23 @@ blogRouter.get('/:id/liked', requireAuth, async (c) => {
             }
         });
 
-        return c.json({ liked: !!liked });
+        return res.json({ liked: !!liked });
     } catch (e) {
         console.error("Error checking like:", e);
-        c.status(500);
-        return c.json({ error: "Could not check like status" });
+        return res.status(500).json({ error: "Could not check like status" });
     }
 });
 
 // Make ai post
-blogRouter.post('/ai-post', requireAuth, async (c) => {
-    const body = await c.req.json();
-    const { title } = body;
+blogRouter.post('/ai-post', requireAuth, async (req: Request, res: Response) => {
+    const { title } = req.body;
 
     if (!title) {
-        c.status(400);
-        return c.json({ error: "Title not found" })
+        return res.status(400).json({ error: "Title not found" })
     }
 
     const client = new OpenAI({
-        apiKey: c.env.OPENAI_API_KEY
+        apiKey: OPENAI_API_KEY
     });
 
     const SYSTEM_PROMPT = `You are an expert blog writer.
@@ -283,30 +280,27 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
             messages: [{ role: "system", content: SYSTEM_PROMPT }]
         });
 
-        return c.json({
+        return res.json({
             content: response.choices[0].message.content
         })
     } catch (error) {
         console.log("Error in generating content : ", error)
-        c.status(400)
-        return c.json({ error: "Error generating content" })
+        return res.status(400).json({ error: "Error generating content" })
     }
 })
 
 // Get ai summary
-blogRouter.post('/ai-summary', requireAuth, async (c) => {
-    c.header('Content-Encoding', 'identity'); 
+blogRouter.post('/ai-summary', async (req: Request, res: Response) => {
+    res.setHeader('Content-Encoding', 'identity');
 
-    const body = await c.req.json();
-    const { content } = body;
+    const { content } = req.body;
 
     if (!content) {
-        c.status(400)
-        return c.json({ error: "Content not found" })
+        return res.status(400).json({ error: "Content not found" })
     }
 
     const client = new OpenAI({
-        apiKey: c.env.OPENAI_API_KEY
+        apiKey: OPENAI_API_KEY
     });
 
     const SYSTEM_PROMPT = `You are an expert blog summarizer.
@@ -318,33 +312,24 @@ Article content:
 ${content}
 `;
 
-    // try {
-    //     const response = await client.chat.completions.create({
-    //         model: "gpt-3.5-turbo",
-    //         messages: [{ role: "system", content: SYSTEM_PROMPT }]
-    //     });
-
-    //     return c.json({
-    //         summary: response.choices[0].message.content
-    //     })
-    // } catch (error) {
-    //     console.log("Error in summarising content : ", error)
-    //     c.status(400)
-    //     return c.json({ error: "Error summarising content" })
-    // }
-
-    return streamText(c, async (stream) => {
+    try {
         const response = await client.chat.completions.create({
             model: "gpt-3.5-turbo",
             stream: true,
             messages: [{ role: "system", content: SYSTEM_PROMPT }]
         });
 
+        res.setHeader("Content-Type", "text/plain; charset=utf-8")
         for await (const chunk of response) {
             const text = chunk.choices?.[0]?.delta?.content;
-            if (text) await stream.write(text);
+            if (text) res.write(text);
         }
-    });
+        res.end();
+    } catch (error) {
+        console.log("Error in summarising content : ", error)
+        return res.status(400).json({ error: "Error summarising content" })
+    }
+
 });
 
 

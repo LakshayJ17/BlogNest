@@ -1,47 +1,38 @@
-import { PrismaClient } from "@prisma/client/edge";
-import { withAccelerate } from "@prisma/extension-accelerate";
-import { Hono } from "hono";
-import { sign, verify } from "hono/jwt";
+import express from "express";
+import jwt from "jsonwebtoken"
 import { signupInput, signinInput } from "@lakshayj17/common-app";
-
 import bcrypt from 'bcryptjs';
+import { Request, Response } from "express";
+import { PrismaClient } from '@prisma/client'
 
-export const userRouter = new Hono<{
-    Bindings: {
-        DATABASE_URL: string;
-        JWT_SECRET: string;
-    };
-}>();
+export const userRouter = express.Router();
 
-userRouter.post("/signup", async (c) => {
-    // c -> context
-    // zod validation
+const prisma = new PrismaClient();
+
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+userRouter.post("/signup", async (req: Request, res: Response) => {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
 
-    const body = await c.req.json();
+    const body = req.body;
     const { success } = signupInput.safeParse(body);
 
     if (!success) {
-        c.status(400);
-        return c.json({ error: "Invalid email or password"});
+        return res.status(400).json({ error: "Invalid email or password" });
     }
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
 
     const hashedPassword = await bcrypt.hash(body.password, salt);
 
     try {
         const existingUser = await prisma.user.findUnique({
-            where:{
-                email : body.email
+            where: {
+                email: body.email
             }
         })
-        if (existingUser){
-            c.status(409);
-            return c.json({error : "Email already exits"})
+        if (existingUser) {
+            res.status(409);
+            return res.json({ error: "Email already exits" })
         }
 
         const user = await prisma.user.create({
@@ -52,26 +43,20 @@ userRouter.post("/signup", async (c) => {
             },
         });
 
-        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-        return c.json({ jwt });
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        return res.json({ jwt: token });
     } catch (error) {
-        c.status(411);
-        return c.json({ error: "Error creating user" });
+        return res.status(400).json({ error: "Error creating user" });
     }
 });
 
-userRouter.post("/signin", async (c) => {
+userRouter.post("/signin", async (req: Request, res: Response) => {
     // zod validation
-    const body = await c.req.json();
+    const body = req.body;
     const { success } = signinInput.safeParse(body);
     if (!success) {
-        c.status(400);
-        return c.json({ error: "Invalid input" });
+        return res.status(400).json({ error: "Invalid input" });
     }
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
 
     try {
         const user = await prisma.user.findUnique({
@@ -81,39 +66,33 @@ userRouter.post("/signin", async (c) => {
         });
 
         if (!user) {
-            c.status(403);
-            return c.json({ error: "User not found"});
+            return res.status(403).json({ error: "User not found" });
         }
+
         if (!user.hashedPassword) {
-            c.status(400);
-            return c.json({ error: "User does not have a password set" });
+            return res.status(400).json({ error: "User does not have a password set" });
         }
+
         const passwordMatches = await bcrypt.compare(body.password, user.hashedPassword);
         if (!passwordMatches) {
-            c.status(403);
-            return c.json({ error: "Invalid password" });
+            return res.status(403).json({ error: "Invalid password" });
         }
-        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-        return c.json({ jwt });
+
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        return res.json({ jwt: token });
     } catch (error) {
         console.log("Error in signin", error);
-        c.status(400);
-        return c.json({ error: "Error signing in" });
+        return res.status(400).json({ error: "Error signing in" });
     }
 });
 
-userRouter.post("/google-auth", async (c) => {
-    const body = await c.req.json();
+userRouter.post("/google-auth", async (req: Request, res: Response) => {
+    const body = req.body;
     const { email, name, googleId, avatar } = body;
 
     if (!email || !googleId) {
-        c.status(400);
-        return c.json({ error: "Email and Google ID are required" });
+        return res.status(400).json({ error: "Email and Google ID are required" });
     }
-
-    const prisma = new PrismaClient({
-        datasourceUrl: c.env?.DATABASE_URL,
-    }).$extends(withAccelerate());
 
     try {
         let user = await prisma.user.findUnique({
@@ -130,34 +109,26 @@ userRouter.post("/google-auth", async (c) => {
                 },
             });
         }
-        const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
-        return c.json({ jwt });
+        const token = jwt.sign({ id: user.id }, JWT_SECRET);
+        return res.json({ jwt: token });
     } catch (error) {
         console.log("Error during google signup/signin", error);
-        c.status(500);
-        return c.json({ error: "Error in Google authentication" });
-    } finally {
-        await prisma.$disconnect();
+        return res.status(500).json({ error: "Error in Google authentication" });
     }
 });
 
-userRouter.get("/me", async (c) => {
-    // Get the authorization header
-    const authHeader = c.req.header("Authorization");
+userRouter.get("/me", async (req: Request, res: Response) => {
+    const authHeader = req.headers["authorization"];
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        c.status(401);
-        return c.json({ error: "Authorization header required" });
+        return res.status(401).json({ error: "Authorization header required" });
     }
 
     const token = authHeader.split(" ")[1];
 
     try {
-        const payload = await verify(token, c.env.JWT_SECRET);
+        const payload = jwt.verify(token, JWT_SECRET);
         const userId = (payload as any).id;
-
-        const prisma = new PrismaClient({
-            datasourceUrl: c.env?.DATABASE_URL,
-        }).$extends(withAccelerate());
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -182,11 +153,11 @@ userRouter.get("/me", async (c) => {
         });
 
         if (!user) {
-            c.status(404);
-            return c.json({ error: "User not found" });
+            res.status(404);
+            return res.json({ error: "User not found" });
         }
 
-        return c.json({
+        return res.json({
             id: user.id,
             name: user.name,
             email: user.email,
@@ -198,7 +169,7 @@ userRouter.get("/me", async (c) => {
         });
     } catch (error) {
         console.log("Error in /me endpoint:", error);
-        c.status(401);
-        return c.json({ error: "Invalid token" });
+        res.status(401);
+        return res.json({ error: "Invalid token" });
     }
 });
