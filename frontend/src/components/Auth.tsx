@@ -53,6 +53,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   }
 
   const handleGoogleAuth = async (credentialResponse: any) => {
+    setLoading(true)
     try {
       const decoded: any = jwtDecode(credentialResponse.credential);
       const response = await axios.post(
@@ -71,6 +72,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     } catch (error) {
       notify();
       console.log("Error in google auth", error);
+    } finally{
+      setLoading(false)
     }
   };
 

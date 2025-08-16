@@ -16,9 +16,8 @@
 - **Axios** – API handling  
 
 ### Backend  
-- **Hono** – Lightweight web framework  
+- **Express** –  
 - **Prisma** – ORM for PostgreSQL  
-- **Cloudflare Workers** – Serverless deployment  
 - **Zod** – Schema validation  
 
 ---
