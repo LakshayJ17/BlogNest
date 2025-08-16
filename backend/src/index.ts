@@ -1,24 +1,24 @@
-import { Hono } from "hono";
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 import { userRouter } from "./routes/user";
 import { blogRouter } from "./routes/blog";
-import { cors } from "hono/cors";
 
-// To get the right types on c.env, when initializing the Hono app, pass the types of env as a generic
-const app = new Hono<{
-  Bindings: {
-    DATABASE_URL: string;
-    JWT_SECRET: string;
-  };
-}>();
+dotenv.config();
 
-app.use(
-  "/*", cors({
-    origin: ["http://localhost:5173", "https://blognest-project.vercel.app"],
-    credentials: true,
-  })
-);
+const app = express();
 
-app.route("/api/v1/user", userRouter);
-app.route("/api/v1/blog", blogRouter);
+app.use(cors({
+  origin: ["http://localhost:5173", "https://blognest-project.vercel.app"],
+  credentials: true,
+}));
+app.use(express.json());
 
-export default app;
+app.use("/api/v1/user", userRouter);
+app.use("/api/v1/blog", blogRouter);
+
+const PORT = process.env.PORT || 8787;
+
+app.listen(PORT, () => {
+  console.log(`Express server running on port ${PORT}`);
+});
