@@ -10,8 +10,8 @@ export interface Blog {
     "date": string;
     "author": {
         "name": string;
-        "googleId"?:string;
-        "avatar"?:string;
+        "googleId"?: string;
+        "avatar"?: string;
         "bio": string;
     };
     "labels": string[];
@@ -43,26 +43,30 @@ export const useBlog = ({ id }: { id: string }) => {
     return { loading, blog }
 }
 
-export const useBlogs = () => {
+export const useBlogs = (search?: string, label?: string) => {
     const [loading, setLoading] = useState(true)
     const [blogs, setBlogs] = useState<Blog[]>([])
 
     const { token } = useAuthStore();
 
     useEffect(() => {
-        if (!token) return
+        if (!token) return;
+        setLoading(true)
 
-        axios.get(`${BACKEND_URL}/api/v1/blog/bulk`, {
+        const searchParams = new URLSearchParams();
+        if (search && search.trim() !== "") searchParams.append("q", search);
+        if (label && label.trim() !== "") searchParams.append("label", label);
+
+        axios.get(`${BACKEND_URL}/api/v1/blog/bulk?${searchParams.toString()}`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
             .then(response => {
-                console.log(response.data.posts)
                 setBlogs(response.data.posts)
                 setLoading(false)
             })
-    }, [token])
+    }, [token, search, label])
 
     return { loading, blogs }
 }
