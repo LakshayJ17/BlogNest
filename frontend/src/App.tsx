@@ -9,6 +9,7 @@ import Home from './pages/Home'
 import { ToastContainer } from 'react-toastify'
 import { useAuthStore } from './store/auth'
 import { useEffect } from 'react'
+import { Drafts } from './pages/Drafts'
 
 
 function App() {
@@ -29,6 +30,8 @@ function App() {
           <Route path='/blog/:id' element={<Blog />} />
           <Route path='/blogs' element={<Blogs />} />
           <Route path='/publish' element={<Publish />} />
+          <Route path='/publish/:id' element={<Publish />} />
+          <Route path='/drafts' element={<Drafts />} />
         </Routes>
       </BrowserRouter>
 

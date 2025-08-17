@@ -57,8 +57,8 @@ blogRouter.post('/draft', requireAuth, async (req: AuthRequest, res: Response) =
             input: input
         });
 
-        if (moderation.results.some(result => result.flagged)){
-            return res.status(400).json({error : "Your post contains harmful or unsafe content"})
+        if (moderation.results.some(result => result.flagged)) {
+            return res.status(400).json({ error: "Your post contains harmful or unsafe content" })
         }
 
         const post = await prisma.post.create({
@@ -103,8 +103,8 @@ blogRouter.post('/publish', requireAuth, async (req: AuthRequest, res: Response)
             input: input
         });
 
-        if (moderation.results.some(result => result.flagged)){
-            return res.status(400).json({error : "Your post contains harmful or unsafe content"})
+        if (moderation.results.some(result => result.flagged)) {
+            return res.status(400).json({ error: "Your post contains harmful or unsafe content" })
         }
 
         const post = await prisma.post.create({
@@ -209,6 +209,76 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Error fetching posts" });
     }
 
+})
+
+blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+        const drafts = await prisma.post.findMany({
+            where: {
+                status: "draft",
+                authorId: userId
+            },
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                date: true,
+                status: true,
+                author: {
+                    select: {
+                        name: true,
+                        googleId: true,
+                        avatar: true,
+                        bio: true,
+                    }
+                },
+                labels: true,
+                _count: {
+                    select: {
+                        likes: true,
+                    },
+                },
+            }
+        })
+        return res.json({ drafts })
+    } catch (error) {
+        return res.status(400).json({ error: "No drafts found" })
+    }
+})
+
+blogRouter.patch('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+    const {id} = req.params;
+    const {title, content,labels, status} = req.body;
+
+    const userId = req.userId
+
+    try{
+        const updated = await prisma.post.updateMany({
+            where: {
+                id,
+                authorId: userId,
+                status: "draft"
+            }, data : {
+                title,
+                content,
+                labels,
+                status
+            }
+        })
+
+        if (updated.count === 0){
+            return res.json(404).json({error : "Draft not found"})
+        }
+
+        return res.json({success : true})
+    } catch(error){
+        return res.status(400).json({error : "Could not update draft"})
+    }
 })
 
 // Get particular blog by id 

@@ -4,9 +4,9 @@ import { BACKEND_URL } from "../config"
 import { useAuthStore } from "../store/auth";
 
 export interface Blog {
-    "content": string;
-    "title": string;
     "id": string;
+    "title": string;
+    "content": string;
     "date": string;
     "author": {
         "name": string;
@@ -18,6 +18,7 @@ export interface Blog {
     "_count": {
         "likes": number;
     };
+    "status" : string
 
 }
 
@@ -69,4 +70,26 @@ export const useBlogs = (search?: string, label?: string) => {
     }, [token, search, label])
 
     return { loading, blogs }
+}
+
+export const useDraft = () => {
+    const { token } = useAuthStore();
+    const [loading, setLoading] = useState(true)
+    const [drafts, setDrafts] = useState<Blog[]>([])
+
+    useEffect(() => {
+        if (!token) return;
+        setLoading(true);
+
+        axios.get(`${BACKEND_URL}/api/v1/blog/drafts`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(response => {
+            setDrafts(response.data.drafts)
+            setLoading(false);
+        })
+    }, [token])
+
+    return { loading, drafts }
 }

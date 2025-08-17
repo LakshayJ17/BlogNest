@@ -1,8 +1,8 @@
 import axios from "axios";
 import { Appbar } from "../components/Appbar";
 import { BACKEND_URL } from "../config";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Unauthorized } from "../components/Unauthorized";
 import { Spinner } from "../components/Spinner";
 import { BackButton } from "../components/BackButton";
@@ -21,6 +21,8 @@ const labels = [
 ];
 
 export const Publish = () => {
+  const { id } = useParams();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState<null | "draft" | "publish" | "ai">(null);
@@ -32,16 +34,39 @@ export const Publish = () => {
   const { token } = useAuthStore();
 
   const notifyWarn = () => toast.warning("Please fill all the fields");
-  const notifyError = () =>
-    toast.error("An error occurred while publishing the blog");
+  const notifyError = () => toast.error("An error occurred while publishing the blog");
+
+  useEffect(() => {
+    // If id then working with draft else its a new post 
+    // Get draft post content to show/edit in text editor 
+    if (id) {
+      axios.get(`${BACKEND_URL}/api/v1/blog/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          const post = res.data.post;
+          setTitle(post.title || "");
+          setContent(post.content || "");
+          setSelectedLabels(post.labels || []);
+          setIsAIGenerated(post.isAIGenerated || false);
+        })
+        .catch(() => {
+          toast.error("Could not load draft");
+        });
+    } else {
+      setTitle("");
+      setContent("");
+      setSelectedLabels([]);
+      setIsAIGenerated(false);
+    }
+
+  }, [id, token]);
 
   if (!token) {
     return <Unauthorized />;
   }
 
-  const labelsToSend = isAIGenerated
-    ? Array.from(new Set([...selectedLabels, "AI Generated"]))
-    : selectedLabels;
+  const labelsToSend = isAIGenerated ? Array.from(new Set([...selectedLabels, "AI Generated"])) : selectedLabels;
 
   const handlePublish = async (type: "draft" | "publish") => {
     if (!title || !content) {
@@ -51,21 +76,42 @@ export const Publish = () => {
 
     setLoading(type);
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/blog/${type}`,
-        {
-          title,
-          content,
-          labels: labelsToSend,
-          status: type === "publish" ? "published" : "draft",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+      let response;
+
+      // If id is present send patch request for update in content of draft post
+      if (id) {
+        response = await axios.patch(
+          `${BACKEND_URL}/api/v1/blog/${id}`,
+          {
+            title,
+            content,
+            labels: labelsToSend,
+            status: type === "publish" ? "published" : "draft",
           },
-          validateStatus: () => true,
-        }
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            validateStatus: () => true,
+          }
+        );
+      } else {
+        // else its a new post 
+        response = await axios.post(`${BACKEND_URL}/api/v1/blog/${type}`,
+          {
+            title,
+            content,
+            labels: labelsToSend,
+            status: type === "publish" ? "published" : "draft",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            validateStatus: () => true,
+          }
+        );
+      }
 
       if (response.status !== 200) {
         toast.error(
@@ -76,11 +122,14 @@ export const Publish = () => {
         toast.success(
           type === "publish"
             ? "Blog published successfully"
-            : "Blog saved as draft"
+            : id
+              ? "Draft updated"
+              : "Blog saved as draft"
         );
       }
 
-      navigate(`/blog/${response.data.id}`);
+      const blogId = response.data.id || id;
+      navigate(type === "publish" ? `/blog/${blogId}` : `/drafts`);
     } catch (error) {
       console.error("Error publishing the blog:", error);
       notifyError();
@@ -97,8 +146,7 @@ export const Publish = () => {
 
     setLoading("ai");
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/blog/ai-post`,
+      const response = await axios.post(`${BACKEND_URL}/api/v1/blog/ai-post`,
         { title },
         {
           headers: {

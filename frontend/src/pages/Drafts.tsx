@@ -1,22 +1,12 @@
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Appbar } from "../components/Appbar";
 import { BlogCard } from "../components/BlogCard";
-import { BlogSkeleton } from "../components/BlogSkeleton";
-import { useBlogs } from "../hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { useDraft } from "../hooks";
 import { PlusCircle } from "lucide-react";
+import { BlogSkeleton } from "../components/BlogSkeleton";
 
-export const Blogs = () => {
-    const [search, setSearch] = useState("");
-    const [debouncedSearch, setDebouncedSearch] = useState(search);
-    const [label, setLabel] = useState("");
-    const { loading, blogs } = useBlogs(debouncedSearch, label);
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const handler = setTimeout(() => setDebouncedSearch(search), 400);
-        return () => clearTimeout(handler);
-    }, [search]);
+export const Drafts = () => {
+    const { loading, drafts } = useDraft();
 
     if (loading) {
         return (
@@ -29,29 +19,24 @@ export const Blogs = () => {
             </div>
         );
     }
-
     return (
         <div className="min-h-screen overflow-x-hidden bg-gray-50">
             <Appbar
                 navigateTo="/blogs"
                 label="BlogNest"
                 buttons={
-                    <div className="flex items-center gap-5">
-                        <Link to={'/drafts'}>Drafts</Link>
+                    <Link to="/publish">
                         <button
-                            onClick={() => navigate('/publish')}
                             type="button"
                             className="cursor-pointer text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-300 font-medium rounded-lg text-sm py-2 px-4 transition flex gap-2 items-center justify-center mr-2"
                         >
                             <PlusCircle />
                             New
                         </button>
-                    </div>
-
-
+                    </Link>
                 }
             />
-            <div className="flex flex-col md:flex-row justify-center items-center gap-6 pt-10 pb-4">
+            {/* <div className="flex flex-col md:flex-row justify-center items-center gap-6 pt-10 pb-4">
                 <input
                     type="text"
                     value={search}
@@ -74,10 +59,10 @@ export const Blogs = () => {
                     <option value="Space">Space</option>
                     <option value="Hobby">Hobby</option>
                 </select>
-            </div>
+            </div> */}
 
             <div className="flex justify-center px-4 md:px-10 py-6">
-                {blogs.length === 0 ? (
+                {drafts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center w-full max-w-screen-md bg-white rounded-lg shadow-md py-16">
                         <img
                             src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
@@ -99,17 +84,17 @@ export const Blogs = () => {
                     </div>
                 ) : (
                     <div className="w-full max-w-screen-md flex flex-col gap-6">
-                        {blogs.map((blog) => (
+                        {drafts.map((draft) => (
                             <BlogCard
-                                key={blog.id}
-                                id={blog.id}
-                                author={blog.author}
-                                title={blog.title}
-                                content={blog.content}
-                                publishedDate={blog.date}
-                                _count={blog._count}
-                                labels={blog.labels}
-                                status={blog.status}
+                                key={draft.id}
+                                id={draft.id}
+                                author={draft.author}
+                                title={draft.title}
+                                content={draft.content}
+                                publishedDate={draft.date}
+                                _count={draft._count}
+                                labels={draft.labels}
+                                status={draft.status}
                             />
                         ))}
                     </div>
