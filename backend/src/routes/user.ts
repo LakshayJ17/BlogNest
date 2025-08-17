@@ -138,7 +138,7 @@ userRouter.get("/me", async (req: Request, res: Response) => {
                         id: true,
                         title: true,
                         content: true,
-                        published: true,
+                        status: true,
                         date: true,
                     },
                 },

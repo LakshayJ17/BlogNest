@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PostStatus {
+  draft
+  published
+  archived
+  deleted
+}
+
 model User {
   id             String  @id @default(uuid())
   email          String  @unique
@@ -20,20 +27,20 @@ model User {
 }
 
 model Post {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
   titleImage     String?
   content        String
-  published      Boolean  @default(false)
-  isDraft        Boolean  @default(true)
-  isAIGenerated  Boolean  @default(false)
+  status         PostStatus @default(draft)
+  isAIGenerated  Boolean    @default(false)
   labels         String[]
-  harmfulContent Boolean  @default(false)
-  harmfulScore   Float?
   authorId       String
-  date           DateTime @default(now())
+  date           DateTime   @default(now())
   likes          Like[]
-  author         User     @relation(fields: [authorId], references: [id])
+  author         User       @relation(fields: [authorId], references: [id])
+
+  @@index([authorId, status])
+
 }
 
 model Like {

@@ -23,34 +23,51 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
 
     const generateSummary = async () => {
         setLoading(true);
-        setSummary("")
+        setSummary("");
         try {
             const response = await fetch(`${BACKEND_URL}/api/v1/blog/ai-summary`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ content: blog.content })
-            })
+                body: JSON.stringify({ content: blog.content }),
+            });
 
-            if (!response.body) throw new Error("No response body")
+            if (!response.body) throw new Error("No response body");
 
             const reader = response.body.getReader();
-            let result = "";
             const decoder = new TextDecoder();
+            let done = false;
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                result += decoder.decode(value);
-                setSummary(result); 
+            while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                const chunk = decoder.decode(value, { stream: true });
+
+                const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+                lines.forEach(line => {
+                    const dataStr = line.substring(5).trim();
+                    if (dataStr === "[DONE]") {
+                        reader.cancel(); 
+                        return;
+                    }
+
+                    try {
+                        const data = JSON.parse(dataStr);
+                        setSummary(prev => prev + data.content);
+                    } catch (e) {
+                        console.error("Error parsing SSE data:", e, line);
+                    }
+                });
             }
-            setLoading(false);
+
         } catch (error) {
-            setLoading(false)
+            setLoading(false);
             toast.error("Error generating summary");
             console.log("Error generating summary : ", error);
+        } finally {
+            setLoading(false);
         }
     };
 

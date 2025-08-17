@@ -12,7 +12,7 @@ interface User {
         id: string;
         title: string;
         content: string;
-        published: boolean;
+        status: string;
         date: string;
     }>;
     likes: Array<{

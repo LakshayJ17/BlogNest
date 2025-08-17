@@ -32,8 +32,7 @@ export const Publish = () => {
   const { token } = useAuthStore();
 
   const notifyWarn = () => toast.warning("Please fill all the fields");
-  const notifyError = () =>
-    toast.error("An error occurred while publishing the blog");
+  const notifyError = () => toast.error("An error occurred while publishing the blog");
 
   if (!token) {
     return <Unauthorized />;
@@ -58,8 +57,18 @@ export const Publish = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          validateStatus: () => true
         }
       );
+
+      if (response.status !== 200){
+        toast.error(response.data?.error || "An error occurred while publishing the blog");
+        setLoading(false)
+        return
+      } else{
+        toast.success("Blog posted successfully")
+      }
+      
       navigate(`/blog/${response.data.id}`);
     } catch (error) {
       console.error("Error publishing the blog:", error);

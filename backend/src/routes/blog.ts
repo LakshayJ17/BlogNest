@@ -48,13 +48,26 @@ blogRouter.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
         return res.json({ error: "Invalid input" });
     }
 
+    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+
     try {
+        const input = [body.title, body.content]
+        const moderation = await client.moderations.create({
+            model: "omni-moderation-latest",
+            input: input
+        });
+
+        if (moderation.results.some(result => result.flagged)){
+            return res.status(400).json({error : "Your post contains harmful or unsafe content"})
+        }
+
         const post = await prisma.post.create({
             data: {
                 title: body.title,
                 content: body.content,
                 authorId: userId,
                 labels: body.labels,
+                status: "published"
             }
         });
 
@@ -105,7 +118,9 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
     const q = req.query.q as string || ""
     const label = req.query.label as string;
 
-    const where: any = {};
+    const where: any = {
+        status: "published"
+    };
 
     if (q) {
         where.OR = [
@@ -290,24 +305,23 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
     }
 })
 
-// Get ai summary
+
 blogRouter.post('/ai-summary', async (req: Request, res: Response) => {
-    res.setHeader('Content-Encoding', 'identity');
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
     const { content } = req.body;
-
     if (!content) {
         return res.status(400).json({ error: "Content not found" })
     }
 
-    const client = new OpenAI({
-        apiKey: OPENAI_API_KEY
-    });
+    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-    const SYSTEM_PROMPT = `You are an expert blog summarizer.
-Summarize the following article content in 5-7 sentences, focusing only on the most important points, facts, and statistics. Be brief but clear.
-Return the summary in plain text, without any code blocks.
-If the topic is illegal, violent, or clearly unsafe, do not generate the summary and return an error message instead. Otherwise, always generate the summary.
+    const SUMMARY_PROMPT = `You are an expert blog summarizer.
+Summarize the following article content in 5-7 sentences, focusing only on the most important points.
+Return the summary in plain text.
 
 Article content:
 ${content}
@@ -317,21 +331,21 @@ ${content}
         const response = await client.chat.completions.create({
             model: "gpt-3.5-turbo",
             stream: true,
-            messages: [{ role: "system", content: SYSTEM_PROMPT }]
+            messages: [{ role: "system", content: SUMMARY_PROMPT }]
         });
 
-        res.setHeader("Content-Type", "text/plain; charset=utf-8")
         for await (const chunk of response) {
-            const text = chunk.choices?.[0]?.delta?.content;
-            if (text) res.write(text);
+            const text = chunk.choices[0]?.delta?.content || "";
+            if (text) {
+                res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+            }
         }
+
+        res.write("data: [DONE]\n\n");
         res.end();
     } catch (error) {
-        console.log("Error in summarising content : ", error)
-        return res.status(400).json({ error: "Error summarising content" })
+        console.error("Error in summarising content:", error);
+        res.status(500).json({ error: "Error summarising content" });
     }
-
 });
-
-
 
