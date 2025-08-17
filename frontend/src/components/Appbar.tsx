@@ -2,9 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Avatar } from "./BlogCard";
 import { useAuthStore } from "../store/auth";
-import { User, LogOut, PlusCircle } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 
-export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React.ReactNode }) => {
+interface AppBarProps { 
+    label: React.ReactNode; 
+    navigateTo: string; 
+    buttons?: React.ReactNode 
+}
+
+export const Appbar = ({ navigateTo, label, buttons }: AppBarProps ) => {
     const { user, logout } = useAuthStore()
     const name = user?.name || "Anonymous";
 
@@ -35,15 +41,7 @@ export const Appbar = ({ navigateTo, label }: { navigateTo: string, label: React
             </Link>
 
             <div className="relative flex items-center gap-2 pr-2" ref={dropdownRef}>
-                <Link to="/publish">
-                    <button
-                        type="button"
-                        className="flex gap-2 items-center justify-center cursor-pointer mr-4 text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-xl text-sm py-2.5 px-2 text-center transition duration-200 ease-in-out w-22"
-                    >
-                        <PlusCircle />
-                        New
-                    </button>
-                </Link>
+                {buttons}
 
                 <div
                     onClick={() => setDropdownOpen(!dropdownOpen)}

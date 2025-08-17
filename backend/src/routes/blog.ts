@@ -34,8 +34,54 @@ async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) 
     }
 }
 
+// Draft post
+blogRouter.post('/draft', requireAuth, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const body = req.body;
+    const { success } = createBlogInput.safeParse(body);
+    if (!success) {
+        res.status(400);
+        return res.json({ error: "Invalid input" });
+    }
+
+    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+    try {
+        const input = [body.title, body.content]
+        const moderation = await client.moderations.create({
+            model: "omni-moderation-latest",
+            input: input
+        });
+
+        if (moderation.results.some(result => result.flagged)){
+            return res.status(400).json({error : "Your post contains harmful or unsafe content"})
+        }
+
+        const post = await prisma.post.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                authorId: userId,
+                labels: body.labels,
+                status: "draft"
+            }
+        });
+
+        return res.json({
+            id: post.id
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({ error: "Error creating post" })
+    }
+})
+
 // Post blog
-blogRouter.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.post('/publish', requireAuth, async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -77,7 +123,6 @@ blogRouter.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
     } catch (error) {
         res.status(400).json({ error: "Error creating post" })
     }
-
 })
 
 // Update blog content
@@ -287,7 +332,7 @@ blogRouter.post('/ai-post', requireAuth, async (req: Request, res: Response) => 
     const SYSTEM_PROMPT = `You are an expert blog writer.
 Write a well-structured, engaging, and informative blog article on the topic: "${title}".
 Return the article in valid HTML format, using headings (<h2>, <h3>), paragraphs (<p>), and lists (<ul>, <ol>) where appropriate.
-Do not include any code blocks.
+If the topic involves code or programming, include code blocks using <pre><code>...</code></pre> tags.
 If the topic is illegal, violent, or clearly unsafe, do not generate the article and return an error message instead. Otherwise, always generate the article.`;
 
     try {

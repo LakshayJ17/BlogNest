@@ -4,6 +4,7 @@ import { BlogCard } from "../components/BlogCard";
 import { BlogSkeleton } from "../components/BlogSkeleton";
 import { useBlogs } from "../hooks";
 import { Link } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
 
 export const Blogs = () => {
     const [search, setSearch] = useState("");
@@ -13,8 +14,8 @@ export const Blogs = () => {
 
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedSearch(search), 400);
-        return () => clearTimeout(handler)
-    }, [search])
+        return () => clearTimeout(handler);
+    }, [search]);
 
     if (loading) {
         return (
@@ -30,7 +31,21 @@ export const Blogs = () => {
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-gray-50">
-            <Appbar navigateTo="/blogs" label="BlogNest" />
+            <Appbar
+                navigateTo="/blogs"
+                label="BlogNest"
+                buttons={
+                    <Link to="/publish">
+                        <button
+                            type="button"
+                            className="cursor-pointer text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-300 font-medium rounded-lg text-sm py-2 px-4 transition flex gap-2 items-center justify-center mr-2"
+                        >
+                            <PlusCircle />
+                            New
+                        </button>
+                    </Link>
+                }
+            />
             <div className="flex flex-col md:flex-row justify-center items-center gap-6 pt-10 pb-4">
                 <input
                     type="text"
@@ -64,8 +79,12 @@ export const Blogs = () => {
                             alt="No blogs"
                             className="w-24 h-24 mb-4 opacity-70"
                         />
-                        <p className="text-lg text-gray-600 mb-2 font-semibold">No blogs found</p>
-                        <p className="text-gray-400 mb-4">Try a different search or label.</p>
+                        <p className="text-lg text-gray-600 mb-2 font-semibold">
+                            No blogs found
+                        </p>
+                        <p className="text-gray-400 mb-4">
+                            Try a different search or label.
+                        </p>
                         <Link
                             to="/publish"
                             className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition"
