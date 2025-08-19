@@ -5,12 +5,16 @@ import { LikeButton } from "./LikeButton";
 import { Sparkle } from "lucide-react";
 
 interface BlogCardProps {
+  type: "draft" | "publish";
   id: string;
   author: {
     name: string;
     googleId?: string;
     avatar?: string;
+    bio?: string;
   };
+  authorId?: string;
+  currentUserId?: string;
   title: string;
   content: string;
   publishedDate: string;
@@ -22,6 +26,7 @@ interface BlogCardProps {
 }
 
 export const BlogCard = ({
+  type,
   author,
   title,
   content,
@@ -30,11 +35,14 @@ export const BlogCard = ({
   _count,
   labels,
   status,
+  authorId,
+  currentUserId,
 }: BlogCardProps) => {
   const { liked, likes, toggleLike } = useLike(id, _count.likes);
   const minutes = Math.ceil(content.split(" ").length / 200);
 
   const linkto = status === "draft" ? `/publish/${id}` : `/blog/${id}`;
+  const isOwnPost = authorId === currentUserId;
 
   return (
     <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200">
@@ -47,9 +55,19 @@ export const BlogCard = ({
 
       <Link to={linkto}>
         <div className="space-y-2">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
-            {title}
-          </h2>
+          <div className="flex gap-5 items-center">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
+              {title}
+            </h2>
+            {isOwnPost ? (
+              <span className="bg-yellow-400 rounded-full px-3 flex justify-center items-center max-w-16 text-xs max-h-12">
+                You
+              </span>
+            ) : (
+              ""
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-2 py-2">
             {Array.isArray(labels) &&
               labels.map((label) =>
@@ -82,9 +100,13 @@ export const BlogCard = ({
         </div>
       </Link>
 
-      <div className="mt-4">
-        <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
-      </div>
+      {type === "publish" ? (
+        <div className="mt-4">
+          <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 };

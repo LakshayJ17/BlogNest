@@ -8,6 +8,7 @@ export interface Blog {
     "title": string;
     "content": string;
     "date": string;
+    "authorId" :  string,
     "author": {
         "name": string;
         "googleId"?: string;

@@ -36,30 +36,6 @@ export const Drafts = () => {
                     </Link>
                 }
             />
-            {/* <div className="flex flex-col md:flex-row justify-center items-center gap-6 pt-10 pb-4">
-                <input
-                    type="text"
-                    value={search}
-                    placeholder="🔍 Search Blogs"
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-64"
-                />
-
-                <select
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value)}
-                    className="border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-52"
-                >
-                    <option value="">All Labels</option>
-                    <option value="AI Generated">AI Generated</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Music">Music</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Space">Space</option>
-                    <option value="Hobby">Hobby</option>
-                </select>
-            </div> */}
 
             <div className="flex justify-center px-4 md:px-10 py-6">
                 {drafts.length === 0 ? (
@@ -86,6 +62,7 @@ export const Drafts = () => {
                     <div className="w-full max-w-screen-md flex flex-col gap-6">
                         {drafts.map((draft) => (
                             <BlogCard
+                                type="draft"
                                 key={draft.id}
                                 id={draft.id}
                                 author={draft.author}

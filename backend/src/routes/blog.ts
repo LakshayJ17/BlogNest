@@ -185,6 +185,7 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
                 title: true,
                 id: true,
                 date: true,
+                authorId: true,
                 author: {
                     select: {
                         name: true,
@@ -252,7 +253,7 @@ blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) =
 })
 
 blogRouter.patch('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
-    const {id} = req.params;
+    const id = req.params.id;
     const {title, content,labels, status} = req.body;
 
     const userId = req.userId
@@ -293,6 +294,7 @@ blogRouter.get('/:id', async (req: Request, res: Response) => {
                 title: true,
                 content: true,
                 date: true,
+                authorId: true,
                 author: {
                     select: {
                         name: true,

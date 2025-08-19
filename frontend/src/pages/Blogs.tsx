@@ -5,12 +5,15 @@ import { BlogSkeleton } from "../components/BlogSkeleton";
 import { useBlogs } from "../hooks";
 import { Link, useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
+import { useAuthStore } from "../store/auth";
 
 export const Blogs = () => {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [label, setLabel] = useState("");
     const { loading, blogs } = useBlogs(debouncedSearch, label);
+    const {user} = useAuthStore();
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -101,9 +104,12 @@ export const Blogs = () => {
                     <div className="w-full max-w-screen-md flex flex-col gap-6">
                         {blogs.map((blog) => (
                             <BlogCard
+                                type="publish"
                                 key={blog.id}
                                 id={blog.id}
                                 author={blog.author}
+                                authorId={blog.authorId}
+                                currentUserId={user?.id}
                                 title={blog.title}
                                 content={blog.content}
                                 publishedDate={blog.date}
