@@ -33,6 +33,7 @@ export const Blogs = () => {
         );
     }
 
+    
     return (
         <div className="min-h-screen overflow-x-hidden bg-gray-50">
             <Appbar

@@ -2,7 +2,12 @@ import { Link } from "react-router-dom";
 import { PostedDate } from "./PostedDate";
 import { useLike } from "../hooks/useLike";
 import { LikeButton } from "./LikeButton";
-import { Sparkle } from "lucide-react";
+import { Ellipsis, Sparkle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
+import { useAuthStore } from "../store/auth";
+import { toast } from "react-toastify";
 
 interface BlogCardProps {
   type: "draft" | "publish";
@@ -38,12 +43,55 @@ export const BlogCard = ({
   authorId,
   currentUserId,
 }: BlogCardProps) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const { liked, likes, toggleLike } = useLike(id, _count.likes);
   const minutes = Math.ceil(content.split(" ").length / 200);
 
   const linkto = status === "draft" ? `/publish/${id}` : `/blog/${id}`;
   const isOwnPost = authorId === currentUserId;
 
+  // const [loading, setLoading] = useState(false);
+
+  const {token}  = useAuthStore();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const handleDelete = async () => {
+    setShowMenu(false);
+    // logic
+
+    const res = await axios.delete(`${BACKEND_URL}/api/v1/blog/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (res.status === 200) {
+      toast("Post deleted successfully")
+    } else{
+      toast("Error deleting post")
+    }
+  };
+  const handleReport = () => {
+    setShowMenu(false);
+    // logic
+  };
   return (
     <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200">
       <div className="flex items-center text-xs text-slate-500 mb-2">
@@ -60,7 +108,7 @@ export const BlogCard = ({
               {title}
             </h2>
             {isOwnPost ? (
-              <span className="bg-yellow-400 rounded-full px-3 flex justify-center items-center max-w-16 text-xs max-h-12">
+              <span className="bg-yellow-400 rounded-full px-3 flex justify-center items-center max-w-16 text-xs h-6">
                 You
               </span>
             ) : (
@@ -101,8 +149,46 @@ export const BlogCard = ({
       </Link>
 
       {type === "publish" ? (
-        <div className="mt-4">
-          <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
+        <div className="flex items-baseline gap-10 mt-5">
+          <div>
+            <LikeButton liked={liked} likes={likes} onClick={toggleLike} />
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu((prev) => !prev)}
+              aria-label="More options"
+              className="p-1 rounded-sm hover:bg-gray-100 bottom-0"
+            >
+              <Ellipsis />
+            </button>
+
+            {showMenu && (
+              <div
+                ref={menuRef}
+                className="absolute top-1/2 left-full -translate-y-1/2 ml-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 flex flex-col py-2"
+                style={{ minWidth: "8rem" }}
+              >
+                {isOwnPost ? (
+                  <button
+                    className="px-4 py-2 text-left hover:bg-red-50 text-red-600 transition-colors rounded-md"
+                    onClick={() => {
+                      console.log("Delete clicked")
+                      handleDelete()
+                    }}
+                  >
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    className="px-4 py-2 text-left hover:bg-yellow-50 text-yellow-600 transition-colors rounded-md"
+                    onClick={handleReport}
+                  >
+                    Report
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         ""

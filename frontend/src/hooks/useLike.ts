@@ -45,7 +45,7 @@ export const useLike = (postId: string, initialLikes: number) => {
       );
 
       const newLiked = res.data.liked;
-      console.log(newLiked)
+      // console.log(newLiked)
       setLiked(newLiked);
       setLikes((prev) => (newLiked ? prev + 1 : prev - 1));
       toast.success(newLiked ? "You liked the post ❤️" : "You unliked the post 💔");

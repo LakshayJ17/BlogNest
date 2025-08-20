@@ -75,7 +75,7 @@ blogRouter.post('/draft', requireAuth, async (req: AuthRequest, res: Response) =
             id: post.id
         });
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         res.status(400).json({ error: "Error creating post" })
     }
 })
@@ -126,11 +126,8 @@ blogRouter.post('/publish', requireAuth, async (req: AuthRequest, res: Response)
 })
 
 // Update blog content
-blogRouter.put('/', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.put('/publish', requireAuth, async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
 
     const body = req.body;
     const { success } = updateBlogInput.safeParse(body);
@@ -140,7 +137,7 @@ blogRouter.put('/', requireAuth, async (req: AuthRequest, res: Response) => {
     }
 
     try {
-        prisma.post.update({
+        await prisma.post.update({
             where: {
                 id: body.id,
                 authorId: userId,
@@ -181,9 +178,9 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
         const posts = await prisma.post.findMany({
             where,
             select: {
-                content: true,
-                title: true,
                 id: true,
+                title: true,
+                content: true,
                 date: true,
                 authorId: true,
                 author: {
@@ -214,9 +211,6 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
 
 blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
 
     try {
         const drafts = await prisma.post.findMany({
@@ -254,17 +248,16 @@ blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) =
 
 blogRouter.patch('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
-    const {title, content,labels, status} = req.body;
+    const { title, content, labels, status } = req.body;
+    const userId = req.userId;
 
-    const userId = req.userId
-
-    try{
+    try {
         const updated = await prisma.post.updateMany({
             where: {
                 id,
                 authorId: userId,
                 status: "draft"
-            }, data : {
+            }, data: {
                 title,
                 content,
                 labels,
@@ -272,23 +265,29 @@ blogRouter.patch('/:id', requireAuth, async (req: AuthRequest, res: Response) =>
             }
         })
 
-        if (updated.count === 0){
-            return res.json(404).json({error : "Draft not found"})
+        if (updated.count === 0) {
+            return res.status(404).json({ error: "Draft not found" })
         }
-
-        return res.json({success : true})
-    } catch(error){
-        return res.status(400).json({error : "Could not update draft"})
+        return res.json({ success: true })
+    } catch (error) {
+        return res.status(400).json({ error: "Could not update draft" })
     }
 })
 
 // Get particular blog by id 
-blogRouter.get('/:id', async (req: Request, res: Response) => {
+blogRouter.get('/:id', async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
+    const userId = req.userId;
 
     try {
-        const post = await prisma.post.findUnique({
-            where: { id },
+        const post = await prisma.post.findFirst({
+            where: {
+                id,
+                OR: [
+                    { status: "published" },
+                    { status: "draft", authorId: userId }
+                ]
+            },
             select: {
                 id: true,
                 title: true,
@@ -312,28 +311,52 @@ blogRouter.get('/:id', async (req: Request, res: Response) => {
             }
         })
         if (!post) {
-            res.status(404).json({ error: "Post not found" })
+            return res.status(404).json({ error: "Post not found" })
         }
+
         return res.json({ post })
     } catch (e) {
         return res.status(400).json({ error: "Post not found" })
     }
 })
 
+blogRouter.delete('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+    const userId = req.userId;
+
+    try {
+        const blog = await prisma.post.findUnique({
+            where: { id, authorId: userId }
+        })
+
+        if (!blog) {
+            return res.status(400).json({ error: "Post not found" })
+        }
+
+        await prisma.post.update({
+            where: { id },
+            data: { status: "deleted" }
+        })
+
+        return res.json({ success: true })
+    } catch (error) {
+        return res.status(400).json({ error: 'Error in deleting post' })
+    }
+})
+
 // Like / unlike the post
 blogRouter.post('/:id/like', requireAuth, async (req: AuthRequest, res: Response) => {
-    const userId = req.userId
+    const userId = req.userId;
     if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
+        return res.status(401).json({ error: "Unauthorized" })
     }
-
     const postId = req.params.id
 
     try {
         const existing = await prisma.like.findUnique({
             where: {
                 userId_postId: {
-                    userId: userId,
+                    userId,
                     postId: postId
                 }
             }
@@ -384,7 +407,7 @@ blogRouter.get('/:id/liked', requireAuth, async (req: AuthRequest, res: Response
 
         return res.json({ liked: !!liked });
     } catch (e) {
-        console.error("Error checking like:", e);
+        // console.error("Error checking like:", e);
         return res.status(500).json({ error: "Could not check like status" });
     }
 });
@@ -410,14 +433,15 @@ If the topic is illegal, violent, or clearly unsafe, do not generate the article
     try {
         const response = await client.chat.completions.create({
             model: "gpt-3.5-turbo",
-            messages: [{ role: "system", content: SYSTEM_PROMPT }]
+            messages: [{ role: "system", content: SYSTEM_PROMPT }],
+            max_completion_tokens: 2000
         });
 
         return res.json({
             content: response.choices[0].message.content
         })
     } catch (error) {
-        console.log("Error in generating content : ", error)
+        // console.log("Error in generating content : ", error)
         return res.status(400).json({ error: "Error generating content" })
     }
 })
@@ -461,8 +485,7 @@ ${content}
         res.write("data: [DONE]\n\n");
         res.end();
     } catch (error) {
-        console.error("Error in summarising content:", error);
+        // console.error("Error in summarising content:", error);
         res.status(500).json({ error: "Error summarising content" });
     }
 });
-

@@ -14,7 +14,7 @@ export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
     e.stopPropagation();
     setAnimating(true);
     onClick();
-    setTimeout(() => setAnimating(false), 300); // Reset animation
+    setTimeout(() => setAnimating(false), 200); 
   };
 
   return (
@@ -25,7 +25,7 @@ export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
         className="focus:outline-none"
       >
         <Heart
-          fill={liked ? "#ef4444" : "none"} // Tailwind red-500
+          fill={liked ? "#ef4444" : "none"} 
           color={liked ? "#ef4444" : "currentColor"}
           className={`w-6 h-6 transition-all duration-300 ease-in-out 
             ${animating ? "scale-125" : "scale-100"} 
