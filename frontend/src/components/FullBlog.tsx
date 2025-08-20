@@ -7,7 +7,7 @@ import { Avatar } from "./BlogCard";
 import { LikeButton } from "./LikeButton";
 import { PostedDate } from "./PostedDate";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BACKEND_URL } from "../config";
 import { useAuthStore } from "../store/auth";
 import { toast } from "react-toastify";
@@ -20,6 +20,10 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
     const [hovered, setHovered] = useState<boolean>(false);
     const [summary, setSummary] = useState("");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     const generateSummary = async () => {
         setLoading(true);
