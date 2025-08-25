@@ -12,7 +12,7 @@ export const Blogs = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(search);
     const [label, setLabel] = useState("");
     const { loading, blogs } = useBlogs(debouncedSearch, label);
-    const {user} = useAuthStore();
+    const { user } = useAuthStore();
 
     const navigate = useNavigate();
 
@@ -33,7 +33,6 @@ export const Blogs = () => {
         );
     }
 
-    
     return (
         <div className="min-h-screen overflow-x-hidden bg-gray-50">
             <Appbar
@@ -41,9 +40,9 @@ export const Blogs = () => {
                 label="BlogNest"
                 buttons={
                     <div className="flex items-center gap-5">
-                        <Link to={'/drafts'}>Drafts</Link>
+                        <Link to={"/drafts"}>Drafts</Link>
                         <button
-                            onClick={() => navigate('/publish')}
+                            onClick={() => navigate("/publish")}
                             type="button"
                             className="cursor-pointer text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-300 font-medium rounded-lg text-sm py-2 px-4 transition flex gap-2 items-center justify-center mr-2"
                         >
@@ -51,8 +50,6 @@ export const Blogs = () => {
                             New
                         </button>
                     </div>
-
-
                 }
             />
             <div className="flex flex-col md:flex-row justify-center items-center gap-6 pt-10 pb-4">

@@ -74,7 +74,6 @@ export const BlogCard = ({
 
   const handleDelete = async () => {
     setShowMenu(false);
-    // logic
 
     const res = await axios.delete(`${BACKEND_URL}/api/v1/blog/${id}`, {
       headers: {
@@ -92,6 +91,7 @@ export const BlogCard = ({
     setShowMenu(false);
     // logic
   };
+
   return (
     <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200">
       <div className="flex items-center text-xs text-slate-500 mb-2">

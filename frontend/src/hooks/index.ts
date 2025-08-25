@@ -8,7 +8,7 @@ export interface Blog {
     "title": string;
     "content": string;
     "date": string;
-    "authorId" :  string,
+    "authorId": string,
     "author": {
         "name": string;
         "googleId"?: string;
@@ -19,7 +19,7 @@ export interface Blog {
     "_count": {
         "likes": number;
     };
-    "status" : string
+    "status": string
 
 }
 

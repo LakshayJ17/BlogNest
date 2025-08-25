@@ -6,14 +6,20 @@ interface User {
     id: string;
     name: string;
     email: string;
+    bio: string;
     googleId?: string;
     avatar?: string;
+    joinedAt: string;
     posts: Array<{
         id: string;
         title: string;
         content: string;
         status: string;
         date: string;
+        labels: string[];
+        _count: {
+            likes: number;
+        }
     }>;
     likes: Array<{
         id: string;

@@ -139,7 +139,11 @@ userRouter.get("/me", async (req: Request, res: Response) => {
                         title: true,
                         content: true,
                         status: true,
+                        labels: true,
                         date: true,
+                        _count: {
+                            select: {likes: true}
+                        }
                     },
                 },
                 likes: {
@@ -166,6 +170,7 @@ userRouter.get("/me", async (req: Request, res: Response) => {
             bio: user.bio,
             posts: user.posts,
             likes: user.likes,
+            joinedAt : user.joinedAt,
         });
     } catch (error) {
         console.log("Error in /me endpoint:", error);

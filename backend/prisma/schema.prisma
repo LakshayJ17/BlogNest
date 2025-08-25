@@ -24,6 +24,7 @@ model User {
   bio            String  @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
   likes          Like[]
   posts          Post[]
+  joinedAt      DateTime @default(now())
 }
 
 model Post {
