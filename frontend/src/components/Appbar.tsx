@@ -1,25 +1,28 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Avatar } from "./BlogCard";
 import { useAuthStore } from "../store/auth";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, LogIn } from "lucide-react";
 
-interface AppBarProps { 
-    label: React.ReactNode; 
-    navigateTo: string; 
-    buttons?: React.ReactNode 
+interface AppBarProps {
+    label: React.ReactNode;
+    navigateTo: string;
+    buttons?: React.ReactNode;
 }
 
-export const Appbar = ({ navigateTo, label, buttons }: AppBarProps ) => {
-    const { user, logout } = useAuthStore()
+export const Appbar = ({ navigateTo, label, buttons }: AppBarProps) => {
+    const { user, logout } = useAuthStore();
     const name = user?.name || "Anonymous";
-
+    const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setDropdownOpen(false);
             }
         };
@@ -52,25 +55,37 @@ export const Appbar = ({ navigateTo, label, buttons }: AppBarProps ) => {
 
                 {dropdownOpen && (
                     <div className="absolute right-0 mt-42 w-56 bg-white rounded-xl shadow-md z-50 border border-gray-200 overflow-hidden transition-all duration-150">
-                        <div className="px-4 py-3 text-sm text-gray-800 font-medium border-b">{name}</div>
+                        <div className="px-4 py-3 text-sm text-gray-800 font-medium border-b">
+                            {name}
+                        </div>
 
-                        <Link to="/profile">
-                            <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-all">
-                                <User className="w-4 h-4 stroke-[1.5]" />
-                                <span>Profile</span>
-                            </div>
-                        </Link>
-
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 transition-all"
-                        >
-                            <LogOut className="w-4 h-4 stroke-[1.5]" />
-                            <span>Logout</span>
-                        </button>
+                        {user ? (
+                            <>
+                                <Link to="/profile">
+                                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-all">
+                                        <User className="w-4 h-4 stroke-[1.5]" />
+                                        <span>Profile</span>
+                                    </div>
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 transition-all"
+                                >
+                                    <LogOut className="w-4 h-4 stroke-[1.5]" />
+                                    <span>Logout</span>
+                                </button>{" "}
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => navigate("/signin")}
+                                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm  hover:bg-gray-100 transition-all"
+                            >
+                                <LogIn className="w-4 h-4 stroke-[1.5]" />
+                                <span>Login</span>
+                            </button>
+                        )}
                     </div>
                 )}
-
             </div>
         </div>
     );

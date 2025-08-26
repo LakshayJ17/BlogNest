@@ -1,18 +1,15 @@
 import { Edit, TrendingUp, Users, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import heroimage from "../assets/heroimage.png";
-import trending1 from "../assets/trending1.png";
-import trending2 from "../assets/trending2.jpeg";
-import trending3 from "../assets/trending3.jpeg";
-import TrendingCard from "../components/TrendingCard";
 import { TypeAnimation } from 'react-type-animation';
+import { useBlogs } from "../hooks";
+import { BlogCard } from "../components/BlogCard";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  function handleSignin() {
-    navigate("/signin");
-  }
+  const { blogs, loading } = useBlogs();
+  const trendingBlogs = blogs?.slice(0, 3) || [];
 
   function handleSignup() {
     navigate("/signup");
@@ -20,7 +17,7 @@ export default function Home() {
 
   return (
     <div style={{ fontFamily: '"Signika", sans-serif' }}
-    className="flex flex-col min-h-screen">
+      className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-white">
         <div className="container mx-auto max-w-6xl px-4 flex h-16 items-center justify-between">
@@ -94,7 +91,7 @@ export default function Home() {
                     Start writing
                   </button>
                   <button
-                    onClick={handleSignin}
+                    onClick={() => navigate('/blogs')}
                     className="cursor-pointer w-full sm:w-auto text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
                   >
                     Explore articles
@@ -144,42 +141,35 @@ export default function Home() {
             </div>
 
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                {
-                  id: 1,
-                  title: "How I Built a Successful Blog in 30 Days",
-                  author: "John Doe",
-                  readTime: "5 min read",
-                  date: "May 26",
-                  category: "Blogging",
-                  image: trending1,
-                },
-                {
-                  id: 2,
-                  title: "The Future of AI: Opportunities & Risks",
-                  author: "Sarah Lee",
-                  readTime: "6 min read",
-                  date: "May 28",
-                  category: "Technology",
-                  image: trending2,
-                },
-                {
-                  id: 3,
-                  title: "10 Essential Tips for Stock Market Beginners",
-                  author: "Michael Smith",
-                  readTime: "7 min read",
-                  date: "May 25",
-                  category: "Finance",
-                  image: trending3,
-                },
-              ].map((article) => (
-                <TrendingCard key={article.id} {...article} />
-              ))}
+              {loading ? (
+                <div className="col-span-full text-center text-gray-400">Loading...</div>
+              ) : trendingBlogs.length ? (
+                trendingBlogs.map((blog) => (
+                  <BlogCard
+                    type="publish"
+                    key={blog.id}
+                    id={blog.id}
+                    author={blog.author}
+                    authorId={blog.authorId}
+                    title={blog.title}
+                    content={blog.content}
+                    publishedDate={blog.date}
+                    _count={blog._count}
+                    labels={blog.labels}
+                    status={blog.status}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center text-gray-400">
+                  No trending blogs found.
+                </div>
+              )}
             </div>
 
             <div className="flex justify-center mt-10">
               <button
                 type="button"
+                onClick={() => navigate('/blogs')}
                 className="cursor-pointer text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center gap-2"
               >
                 See more articles

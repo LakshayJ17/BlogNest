@@ -26,21 +26,15 @@ export interface Blog {
 export const useBlog = ({ id }: { id: string }) => {
     const [loading, setLoading] = useState(true)
     const [blog, setBlog] = useState<Blog>()
-    const { token } = useAuthStore();
 
     useEffect(() => {
-        if (!token) return
-        axios.get(`${BACKEND_URL}/api/v1/blog/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        axios.get(`${BACKEND_URL}/api/v1/blog/${id}`)
             .then(response => {
                 console.log(response.data.post)
                 setBlog(response.data.post)
                 setLoading(false)
             })
-    }, [id, token])
+    }, [id])
 
     return { loading, blog }
 }
@@ -49,26 +43,19 @@ export const useBlogs = (search?: string, label?: string) => {
     const [loading, setLoading] = useState(true)
     const [blogs, setBlogs] = useState<Blog[]>([])
 
-    const { token } = useAuthStore();
-
     useEffect(() => {
-        if (!token) return;
         setLoading(true)
 
         const searchParams = new URLSearchParams();
         if (search && search.trim() !== "") searchParams.append("q", search);
         if (label && label.trim() !== "") searchParams.append("label", label);
 
-        axios.get(`${BACKEND_URL}/api/v1/blog/bulk?${searchParams.toString()}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
+        axios.get(`${BACKEND_URL}/api/v1/blog/bulk?${searchParams.toString()}`)
             .then(response => {
                 setBlogs(response.data.posts)
                 setLoading(false)
             })
-    }, [token, search, label])
+    }, [search, label])
 
     return { loading, blogs }
 }
