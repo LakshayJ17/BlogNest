@@ -22,14 +22,15 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const setToken = useAuthStore((state) => state.setToken);
 
   async function sendRequest() {
-    setLoading(true);
+    setManualLoading(true);
     try {
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`,
@@ -48,12 +49,12 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
       toast.error(errorMsg);
       console.log(error);
     } finally {
-      setLoading(false);
+      setManualLoading(false);
     }
   }
 
   const handleGoogleAuth = async (credentialResponse: any) => {
-    setLoading(true)
+    setGoogleLoading(true)
     try {
       const decoded: any = jwtDecode(credentialResponse.credential);
       const response = await axios.post(
@@ -72,8 +73,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     } catch (error) {
       notify();
       console.log("Error in google auth", error);
-    } finally{
-      setLoading(false)
+    } finally {
+      setGoogleLoading(false)
     }
   };
 
@@ -162,10 +163,10 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={manualLoading || googleLoading}
+            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? (
+            {manualLoading ? (
               <div className="flex items-center justify-center">
                 <Spinner size="small" />
               </div>
@@ -189,14 +190,20 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         </div>
 
         <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={handleGoogleAuth}
-            onError={handleGoogleError}
-            theme="outline"
-            size="large"
-            text={type === "signup" ? "signup_with" : "signin_with"}
-            shape="pill"
-          />
+          {googleLoading ? (
+            <div className="flex items-center px-23 rounded-sm py-2.5 border justify-center">
+                <Spinner size="small" />
+              </div>
+          ) : (
+            <GoogleLogin
+              onSuccess={handleGoogleAuth}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              text={type === "signup" ? "signup_with" : "signin_with"}
+              shape="rectangular"
+            />
+          )}
         </div>
       </div>
     </div>
