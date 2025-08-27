@@ -12,7 +12,14 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
+  const navigate = useNavigate();
   const notify = () => toast.error("Error while signing up");
+
+  const { user } = useAuthStore();
+
+  if (user) {
+    navigate("/blogs");
+  }
 
   const [postInputs, setPostInputs] = useState<SignupInput>({
     name: "",
@@ -24,8 +31,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
   const [manualLoading, setManualLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const setToken = useAuthStore((state) => state.setToken);
 
@@ -54,7 +59,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   }
 
   const handleGoogleAuth = async (credentialResponse: any) => {
-    setGoogleLoading(true)
+    setGoogleLoading(true);
     try {
       const decoded: any = jwtDecode(credentialResponse.credential);
       const response = await axios.post(
@@ -74,7 +79,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
       notify();
       console.log("Error in google auth", error);
     } finally {
-      setGoogleLoading(false)
+      setGoogleLoading(false);
     }
   };
 
@@ -192,8 +197,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         <div className="flex justify-center">
           {googleLoading ? (
             <div className="flex items-center px-23 rounded-sm py-2.5 border justify-center">
-                <Spinner size="small" />
-              </div>
+              <Spinner size="small" />
+            </div>
           ) : (
             <GoogleLogin
               onSuccess={handleGoogleAuth}

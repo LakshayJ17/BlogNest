@@ -4,10 +4,15 @@ import { BlogCard } from "../components/BlogCard";
 import { useDraft } from "../hooks";
 import { PlusCircle } from "lucide-react";
 import { BlogSkeleton } from "../components/BlogSkeleton";
+import { useAuthStore } from "../store/auth";
+import { Unauthorized } from "../components/Unauthorized";
 
 export const Drafts = () => {
     const { loading, drafts } = useDraft();
-
+    const {user} = useAuthStore();
+    if (!user){
+        return <Unauthorized />
+    }
     if (loading) {
         return (
             <div className="min-h-screen flex flex-col items-center gap-6 py-6 bg-gray-50">

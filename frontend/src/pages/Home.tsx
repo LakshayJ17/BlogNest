@@ -4,9 +4,15 @@ import heroimage from "../assets/heroimage.png";
 import { TypeAnimation } from 'react-type-animation';
 import { useBlogs } from "../hooks";
 import { BlogCard } from "../components/BlogCard";
+import { useAuthStore } from "../store/auth";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+
+  if (user) {
+    navigate('/blogs')
+  }
 
   const { blogs, loading } = useBlogs();
   const trendingBlogs = blogs?.slice(0, 3) || [];
