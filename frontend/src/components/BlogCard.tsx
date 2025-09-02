@@ -54,7 +54,7 @@ export const BlogCard = ({
 
   // const [loading, setLoading] = useState(false);
 
-  const {token}  = useAuthStore();
+  const { token } = useAuthStore();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -83,13 +83,34 @@ export const BlogCard = ({
 
     if (res.status === 200) {
       toast("Post deleted successfully")
-    } else{
+    } else {
       toast("Error deleting post")
     }
   };
-  const handleReport = () => {
+
+  const handleReport = async () => {
     setShowMenu(false);
-    // logic
+
+    if (!token) {
+      toast("You must be logged in to report a post");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${BACKEND_URL}/api/v1/blog/report/${id}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.status === 200) {
+        toast.success("Post reported successfully");
+      } else {
+        toast.error("Error reporting post");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Error reporting post");
+    }
   };
 
   return (
@@ -181,7 +202,7 @@ export const BlogCard = ({
                 ) : (
                   <button
                     className="px-4 py-2 text-left hover:bg-yellow-50 text-yellow-600 transition-colors rounded-md"
-                    onClick={handleReport}
+                    onClick={() => handleReport()}
                   >
                     Report
                   </button>

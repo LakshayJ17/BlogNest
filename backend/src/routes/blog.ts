@@ -198,6 +198,9 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
                         likes: true,
                     },
                 },
+                status: true,
+                isReported: true,
+                numberOfReports: true
             }
         });
 
@@ -490,3 +493,34 @@ ${content}
         res.status(500).json({ error: "Error summarising content" });
     }
 });
+
+blogRouter.post("/report/:id", requireAuth("user"), async (req: AuthRequest, res: Response) => {
+    const postId = req.params.id
+
+    try {
+        const post = await prisma.post.findUnique({
+            where: {
+                id: postId
+            }
+        })
+
+        if (!post) {
+            return res.status(404).json({ error: "Post not found" })
+        }
+
+        await prisma.post.update({
+            where: {
+                id: postId
+            },
+            data: {
+                isReported : true,
+                numberOfReports: post.numberOfReports + 1
+            }
+        })
+
+        return res.status(200).json({ reported: true })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Error reporting post" })
+    }
+})

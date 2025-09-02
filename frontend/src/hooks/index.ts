@@ -19,8 +19,9 @@ export interface Blog {
     "_count": {
         "likes": number;
     };
-    "status": string
-
+    "status": string;
+    "isReported": boolean;
+    "numberOfReports" : number;
 }
 
 export const useBlog = ({ id }: { id: string }) => {
