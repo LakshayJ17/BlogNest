@@ -12,36 +12,44 @@ enum PostStatus {
   published
   archived
   deleted
+  removed
+}
+
+enum Role {
+  admin
+  user
 }
 
 model User {
-  id             String  @id @default(uuid())
-  email          String  @unique
-  name           String  @default("Anonymous")
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String   @default("Anonymous")
   hashedPassword String?
   avatar         String?
-  googleId       String? @unique
-  bio            String  @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
+  googleId       String?  @unique
+  bio            String   @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
   likes          Like[]
   posts          Post[]
-  joinedAt      DateTime @default(now())
+  joinedAt       DateTime @default(now())
+  role           Role     @default(user)
 }
 
 model Post {
-  id             String     @id @default(uuid())
-  title          String
-  titleImage     String?
-  content        String
-  status         PostStatus @default(draft)
-  isAIGenerated  Boolean    @default(false)
-  labels         String[]
-  authorId       String
-  date           DateTime   @default(now())
-  likes          Like[]
-  author         User       @relation(fields: [authorId], references: [id])
+  id            String     @id @default(uuid())
+  title         String
+  titleImage    String?
+  content       String
+  status        PostStatus @default(draft)
+  isReported    Boolean    @default(false)
+  numberOfReports Int       @default(0)
+  isAIGenerated Boolean    @default(false)
+  labels        String[]
+  authorId      String
+  date          DateTime   @default(now())
+  likes         Like[]
+  author        User       @relation(fields: [authorId], references: [id])
 
   @@index([authorId, status])
-
 }
 
 model Like {

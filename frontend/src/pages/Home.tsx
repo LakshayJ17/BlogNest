@@ -5,14 +5,21 @@ import { TypeAnimation } from 'react-type-animation';
 import { useBlogs } from "../hooks";
 import { BlogCard } from "../components/BlogCard";
 import { useAuthStore } from "../store/auth";
+import { useEffect } from "react";
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  if (user) {
-    navigate('/blogs')
-  }
+  useEffect(() => {
+    if (user) {
+      if (user.role === "user") {
+        navigate('/blogs');
+      } else {
+        navigate("/admin-dashboard");
+      }
+    }
+  }, [user, navigate]);
 
   const { blogs, loading } = useBlogs();
   const trendingBlogs = blogs?.slice(0, 3) || [];

@@ -25,7 +25,8 @@ interface User {
         id: string;
         postId: string;
         createdAt: string;
-    }>
+    }>;
+    role: string;
 }
 
 interface AuthState {
@@ -35,6 +36,8 @@ interface AuthState {
     user: User | null;
     setUser: (user: User) => void;
     fetchUserData: () => Promise<void>;
+    isLoading: boolean;
+    setIsLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -56,10 +59,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user })
     },
 
-    fetchUserData: async () => {
-        const { token } = get()
-        if (!token) return
+    isLoading: false,
 
+    setIsLoading: (loading) => {
+        set({ isLoading: loading });
+    },
+
+    fetchUserData: async () => {
+        const { token, setIsLoading } = get();
+        if (!token) return;
+
+        setIsLoading(true);
         try {
             const response = await axios.get(`${BACKEND_URL}/api/v1/user/me`, {
                 headers: {
@@ -76,6 +86,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch(error){
             console.log("Error fetching user details : ", error)
             get().logout()
+        } finally {
+            setIsLoading(false);
         }
     },
 

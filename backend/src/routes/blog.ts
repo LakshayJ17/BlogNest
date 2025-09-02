@@ -3,39 +3,40 @@ import { PrismaClient } from '@prisma/client'
 import { createBlogInput, updateBlogInput } from '@lakshayj17/common-app'
 import OpenAI from "openai";
 import { Request, Response, NextFunction } from "express";
-import jwt from 'jsonwebtoken'
+// import jwt from 'jsonwebtoken'
+import { AuthRequest, requireAuth } from "../middleware";
 
 export const blogRouter = express.Router();
 
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+// const JWT_SECRET = process.env.JWT_SECRET as string;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
 
-interface AuthRequest extends Request {
-    userId?: string;
-}
+// interface AuthRequest extends Request {
+//     userId?: string;
+// }
 
-async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-    const authHeader = req.headers['authorization'];
+// async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+//     const authHeader = req.headers['authorization'];
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
+//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//         return res.status(401).json({ error: "Unauthorized" });
+//     }
 
-    const token = authHeader.split(" ")[1];
+//     const token = authHeader.split(" ")[1];
 
-    try {
-        const payload = jwt.verify(token, JWT_SECRET) as { id: string };
-        req.userId = payload.id;
-        return next()
-    } catch (err) {
-        return res.status(401).json({ error: "Invalid or expired token" });
-    }
-}
+//     try {
+//         const payload = jwt.verify(token, JWT_SECRET) as { id: string };
+//         req.userId = payload.id;
+//         return next()
+//     } catch (err) {
+//         return res.status(401).json({ error: "Invalid or expired token" });
+//     }
+// }
 
 // Draft post
-blogRouter.post('/draft', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.post('/draft', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -81,7 +82,7 @@ blogRouter.post('/draft', requireAuth, async (req: AuthRequest, res: Response) =
 })
 
 // Post blog
-blogRouter.post('/publish', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.post('/publish', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -126,7 +127,7 @@ blogRouter.post('/publish', requireAuth, async (req: AuthRequest, res: Response)
 })
 
 // Update blog content
-blogRouter.put('/publish', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.put('/publish', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
 
     const body = req.body;
@@ -209,7 +210,7 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
 
 })
 
-blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.get('/drafts', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
 
     try {
@@ -246,7 +247,7 @@ blogRouter.get('/drafts', requireAuth, async (req: AuthRequest, res: Response) =
     }
 })
 
-blogRouter.patch('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.patch('/:id', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
     const { title, content, labels, status } = req.body;
     const userId = req.userId;
@@ -320,7 +321,7 @@ blogRouter.get('/:id', async (req: AuthRequest, res: Response) => {
     }
 })
 
-blogRouter.delete('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.delete('/:id', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
     const userId = req.userId;
 
@@ -345,7 +346,7 @@ blogRouter.delete('/:id', requireAuth, async (req: AuthRequest, res: Response) =
 })
 
 // Like / unlike the post
-blogRouter.post('/:id/like', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.post('/:id/like', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" })
@@ -387,7 +388,7 @@ blogRouter.post('/:id/like', requireAuth, async (req: AuthRequest, res: Response
 })
 
 // Check if post is liked or not 
-blogRouter.get('/:id/liked', requireAuth, async (req: AuthRequest, res: Response) => {
+blogRouter.get('/:id/liked', requireAuth("user"), async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -413,7 +414,7 @@ blogRouter.get('/:id/liked', requireAuth, async (req: AuthRequest, res: Response
 });
 
 // Make ai post
-blogRouter.post('/ai-post', requireAuth, async (req: Request, res: Response) => {
+blogRouter.post('/ai-post', requireAuth("user"), async (req: Request, res: Response) => {
     const { title } = req.body;
 
     if (!title) {

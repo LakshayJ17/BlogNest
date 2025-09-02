@@ -1,6 +1,6 @@
 import { SignupInput } from "@lakshayj17/common-app";
 import axios from "axios";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../config";
 import { Spinner } from "./Spinner";
@@ -15,11 +15,17 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   const navigate = useNavigate();
   const notify = () => toast.error("Error while signing up");
 
-  const { user } = useAuthStore();
+  const { user, setToken, fetchUserData } = useAuthStore();
 
-  if (user) {
-    navigate("/blogs");
-  }
+  useEffect(() => {
+    if (user) {
+      if (user.role === "user") {
+        navigate('/blogs');
+      } else {
+        navigate("/admin-dashboard");
+      }
+    }
+  }, [user, navigate]);
 
   const [postInputs, setPostInputs] = useState<SignupInput>({
     name: "",
@@ -32,7 +38,6 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   const [manualLoading, setManualLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const setToken = useAuthStore((state) => state.setToken);
 
   async function sendRequest() {
     setManualLoading(true);
@@ -44,8 +49,15 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
       const { jwt } = response.data;
       setToken(jwt);
+      await fetchUserData();
+      const updatedUser = useAuthStore.getState().user;
 
-      navigate("/blogs");
+      if (updatedUser?.role === "admin") {
+        navigate("/admin-dashboard")
+      } else {
+        navigate("/blogs");
+      }
+
     } catch (error: any) {
       let errorMsg = "Error while signing up";
       if (axios.isAxiosError(error) && error.response?.data?.error) {
@@ -74,7 +86,15 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
 
       const { jwt } = response.data;
       setToken(jwt);
-      navigate("/blogs");
+      await fetchUserData();
+      const updatedUser = useAuthStore.getState().user;
+
+      if (updatedUser?.role === "admin") {
+        navigate("/admin-dashboard")
+      } else {
+        navigate("/blogs");
+      }
+
     } catch (error) {
       notify();
       console.log("Error in google auth", error);

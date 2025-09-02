@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { userRouter } from "./routes/user";
 import { blogRouter } from "./routes/blog";
+import { adminRouter } from "./routes/admin";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/blog", blogRouter);
+app.use("/api/v1/admin", adminRouter);
 
 const PORT = process.env.PORT || 8787;
 

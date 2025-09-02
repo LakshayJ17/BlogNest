@@ -79,7 +79,7 @@ userRouter.post("/signin", async (req: Request, res: Response) => {
         }
 
         const token = jwt.sign({ id: user.id }, JWT_SECRET);
-        return res.json({ jwt: token });
+        return res.json({ jwt: token, role: user.role });
     } catch (error) {
         console.log("Error in signin", error);
         return res.status(400).json({ error: "Error signing in" });
@@ -171,6 +171,7 @@ userRouter.get("/me", async (req: Request, res: Response) => {
             posts: user.posts,
             likes: user.likes,
             joinedAt : user.joinedAt,
+            role: user.role
         });
     } catch (error) {
         console.log("Error in /me endpoint:", error);
