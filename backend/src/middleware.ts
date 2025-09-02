@@ -30,6 +30,9 @@ export function requireAuth(role: "admin" | "user") {
         const user = await prisma.user.findUnique({
             where: {
                 id : userId
+            },
+            select: {
+                role: true
             }
         })
 
