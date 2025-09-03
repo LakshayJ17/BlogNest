@@ -77,6 +77,7 @@ export const Drafts = () => {
                                 _count={draft._count}
                                 labels={draft.labels}
                                 status={draft.status}
+                                currentUserRole={user?.role}
                             />
                         ))}
                     </div>

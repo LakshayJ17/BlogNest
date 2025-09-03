@@ -170,6 +170,7 @@ export default function Home() {
                     _count={blog._count}
                     labels={blog.labels}
                     status={blog.status}
+                    currentUserRole={user?.role ?? ""}
                   />
                 ))
               ) : (

@@ -190,6 +190,7 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
                         googleId: true,
                         avatar: true,
                         bio: true,
+                        role: true
                     }
                 },
                 labels: true,
@@ -303,7 +304,8 @@ blogRouter.get('/:id', async (req: AuthRequest, res: Response) => {
                         name: true,
                         googleId: true,
                         avatar: true,
-                        bio: true
+                        bio: true,
+                        role: true
                     }
                 },
                 labels: true,

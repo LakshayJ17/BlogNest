@@ -132,6 +132,7 @@ export const Blogs = () => {
                                 _count={blog._count}
                                 labels={blog.labels}
                                 status={blog.status}
+                                currentUserRole={user?.role ?? ""}
                             />
                         ))}
                     </div>

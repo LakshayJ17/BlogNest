@@ -21,3 +21,26 @@ adminRouter.get('/all-details', requireAuth("admin"), async (req: AuthRequest, r
     })
 })
 
+adminRouter.delete('/:id', requireAuth("admin"), async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+
+    try {
+        const blog = await prisma.post.findUnique({
+            where: { id }
+        })
+
+        if (!blog) {
+            return res.status(400).json({ error: "Post not found" })
+        }
+
+        await prisma.post.update({
+            where: { id },
+            data: { status: "removed" }
+        })
+
+        return res.json({ success: true })
+    } catch (error) {
+        return res.status(400).json({ error: 'Error in deleting post' })
+    }
+})
+

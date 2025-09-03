@@ -5,6 +5,7 @@ import { Unauthorized } from "../components/Unauthorized";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useBlogs } from "../hooks";
+import { BlogCard } from "../components/BlogCard";
 
 export const AdminDashboard = () => {
     const { user, token } = useAuthStore();
@@ -52,12 +53,24 @@ export const AdminDashboard = () => {
         <div>
             Posts to be reviewed
 
-            <div>
+            <div className="max-w-2xl flex justify-center">
                 {blogs.filter(blog => blog.isReported).map((blog) => (
-                    <div key={blog.id}>
-                        <h3>{blog.title}</h3>
-                        <p>{blog.content}</p>
-                    </div>
+                    // console.log(blog)
+                    <BlogCard
+                        type="publish"
+                        key={blog.id}
+                        id={blog.id}
+                        author={blog.author}
+                        authorId={blog.authorId}
+                        currentUserId={user?.id}
+                        title={blog.title}
+                        content={blog.content}
+                        publishedDate={blog.date}
+                        _count={blog._count}
+                        labels={blog.labels}
+                        status={blog.status}
+                        currentUserRole={user?.role}
+                    />
                 ))}
             </div>
         </div>

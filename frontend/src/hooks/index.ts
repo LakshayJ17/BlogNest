@@ -14,6 +14,7 @@ export interface Blog {
         "googleId"?: string;
         "avatar"?: string;
         "bio": string;
+        "role": string;
     };
     "labels": string[];
     "_count": {

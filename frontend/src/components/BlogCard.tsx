@@ -17,6 +17,7 @@ interface BlogCardProps {
     googleId?: string;
     avatar?: string;
     bio?: string;
+    role: string;
   };
   authorId?: string;
   currentUserId?: string;
@@ -28,6 +29,7 @@ interface BlogCardProps {
   };
   labels?: string[];
   status: string;
+  currentUserRole: string;
 }
 
 export const BlogCard = ({
@@ -42,6 +44,7 @@ export const BlogCard = ({
   status,
   authorId,
   currentUserId,
+  currentUserRole
 }: BlogCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -72,10 +75,10 @@ export const BlogCard = ({
     };
   }, [showMenu]);
 
-  const handleDelete = async () => {
+  const handleDelete = async (type : "blog" | "admin") => {
     setShowMenu(false);
 
-    const res = await axios.delete(`${BACKEND_URL}/api/v1/blog/${id}`, {
+    const res = await axios.delete(`${BACKEND_URL}/api/v1/${type}/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -189,12 +192,13 @@ export const BlogCard = ({
                 className="absolute top-1/2 left-full -translate-y-1/2 ml-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20 flex flex-col py-2"
                 style={{ minWidth: "8rem" }}
               >
-                {isOwnPost ? (
+                {(isOwnPost || currentUserRole === "admin") ? (
                   <button
                     className="px-4 py-2 text-left hover:bg-red-50 text-red-600 transition-colors rounded-md"
                     onClick={() => {
                       console.log("Delete clicked")
-                      handleDelete()
+
+                      handleDelete(currentUserRole === "admin" ? "admin" : "blog")
                     }}
                   >
                     Delete
