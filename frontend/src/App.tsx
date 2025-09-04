@@ -12,6 +12,7 @@ import { useEffect } from 'react'
 import { Drafts } from './pages/Drafts'
 import { ProfilePage } from './pages/Profile'
 import { AdminDashboard } from './pages/AdminDashboard'
+import { BlogSkeleton } from './components/BlogSkeleton'
 
 
 function App() {
@@ -24,7 +25,13 @@ function App() {
   }, [token, fetchUserData])
 
   if (isLoading){
-    return <div>Loading...</div>
+    return <div className="min-h-screen flex flex-col items-center gap-6 py-6 bg-gray-50">
+      <BlogSkeleton />
+      <BlogSkeleton />
+      <BlogSkeleton />
+      <BlogSkeleton />
+      <BlogSkeleton />
+    </div>
   }
   return (
     <>
