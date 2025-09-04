@@ -108,14 +108,14 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   };
 
   return (
-    <div className="min-h-screen h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 pt-10">
-        <Link to="/" className="absolute top-6 left-6 sm:top-8 sm:left-8 z-10">
+    <div className="min-h-screen h-screen bg-gray-50 flex items-center justify-center py-12 px-10 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-6 pt-10">
+        <Link to="/" className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
           <BackButton />
         </Link>
 
         <div className="text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">
             {type === "signup" ? "Create an account" : "Welcome back"}
           </h1>
           <p className="text-gray-600">
@@ -132,7 +132,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
         </div>
 
         <form
-          className="space-y-6"
+          className=" space-y-4 sm:space-y-6"
           onSubmit={(e) => {
             e.preventDefault();
             sendRequest();
@@ -214,21 +214,32 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
           </div>
         </div>
 
-        <div className="flex justify-center">
-          {googleLoading ? (
-            <div className="flex items-center px-23 rounded-sm py-2.5 border justify-center">
-              <Spinner size="small" />
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2">
+          <>
+            <div className="flex flex-col items-center w-full sm:w-auto">
+              {googleLoading ? (
+                <div className="flex items-center justify-center w-full sm:w-auto h-12">
+                  <Spinner size="small" />
+                </div>
+              ) : (
+                <GoogleLogin
+                  onSuccess={handleGoogleAuth}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  text={type === "signup" ? "signup_with" : "signin_with"}
+                />
+              )}
             </div>
-          ) : (
-            <GoogleLogin
-              onSuccess={handleGoogleAuth}
-              onError={handleGoogleError}
-              theme="outline"
-              size="large"
-              text={type === "signup" ? "signup_with" : "signin_with"}
-              shape="rectangular"
-            />
-          )}
+            <div className="hidden sm:block h-10 w-px bg-gray-300 mx-4" />
+            <div className="flex flex-col justify-center items-center w-full sm:w-auto">
+              <button
+                className="px-4 py-2 sm:bg-white sm:hover:bg-blue-100/40 sm:rounded-md text-gray-700 font-medium sm:border sm:border-gray-200 w-full hover:cursor-pointer sm:w-auto"
+                onClick={() => navigate("/blogs")}
+              >
+                Continue as Guest
+              </button>
+            </div>
+          </>
         </div>
       </div>
     </div>
@@ -256,14 +267,14 @@ function LabeledInput({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
       <div className="relative">
         <input
           onChange={onChange}
           type={isPasswordField && !showPassword ? "password" : "text"}
-          className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          className="appearance-none relative block w-full px-3 py-2 sm:py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
           placeholder={placeholder}
           required
         />
