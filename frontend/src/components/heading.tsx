@@ -35,7 +35,7 @@ export const Heading = ({
         >
         <Tag
             className={cn(
-                "text-primary text-4xl font-semibold tracking-tighter drop-shadow-md md:text-6xl",
+                "text-black text-4xl font-semibold tracking-tighter drop-shadow-md md:text-6xl",
                 className,
             )}
         >

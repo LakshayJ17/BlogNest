@@ -34,7 +34,7 @@ export const Subheading = ({
         >
             <Tag
                 className={cn(
-                    "text-secondary pt-2 text-sm md:text-lg",
+                    "text-gray-800 pt-2 text-sm md:text-lg",
                     className,
                 )}
             >

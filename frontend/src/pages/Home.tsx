@@ -362,8 +362,8 @@ export default function Home() {
           id="cta-section"
         >
           <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-4">
-            <Heading>Ready to start writing?</Heading>
-            <Subheading>
+            <Heading className="text-white">Ready to start writing?</Heading>
+            <Subheading className="text-white">
               Join our community of writers and readers. Share your perspective
               with the world.
             </Subheading>
