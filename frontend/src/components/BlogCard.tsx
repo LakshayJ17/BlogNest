@@ -49,7 +49,8 @@ export const BlogCard = ({
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { liked, likes, toggleLike } = useLike(id, _count.likes);
+  // Disable like for admin users
+  const { liked, likes, toggleLike } = useLike(id, _count.likes, { disabled: currentUserRole === "admin" });
   const minutes = Math.ceil(content.split(" ").length / 200);
 
   const linkto = status === "draft" ? `/publish/${id}` : `/blog/${id}`;

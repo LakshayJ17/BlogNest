@@ -4,13 +4,19 @@ import { BACKEND_URL } from "../config";
 import { toast } from "react-toastify";
 import { useAuthStore } from "../store/auth";
 
-export const useLike = (postId: string, initialLikes: number) => {
+export const useLike = (
+  postId: string,
+  initialLikes: number,
+  options?: { disabled?: boolean }
+) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+
+  const disabled = options?.disabled || user?.role === "admin";
 
   useEffect(() => {
-    if (!token || !postId) return;
+    if (!token || !postId || disabled) return;
 
     axios
       .get(`${BACKEND_URL}/api/v1/blog/${postId}/liked`, {
@@ -25,9 +31,10 @@ export const useLike = (postId: string, initialLikes: number) => {
         console.error("Failed to fetch liked status:", err);
         toast.error("Could not fetch like status 😿");
       });
-  }, [postId, token]);
+  }, [postId, token, disabled]);
 
   const toggleLike = async () => {
+    if (disabled) return;
     if (!token) {
       toast.error("Please sign in to like the post.");
       return;
@@ -45,7 +52,6 @@ export const useLike = (postId: string, initialLikes: number) => {
       );
 
       const newLiked = res.data.liked;
-      // console.log(newLiked)
       setLiked(newLiked);
       setLikes((prev) => (newLiked ? prev + 1 : prev - 1));
       toast.success(newLiked ? "You liked the post ❤️" : "You unliked the post 💔");
