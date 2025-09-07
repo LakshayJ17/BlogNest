@@ -123,7 +123,7 @@ export const FullBlog = ({ blog }: { blog: Blog }) => {
                         />
                     </div>
 
-                    <div className="lg:col-span-4 space-y-10 ml-10">
+                    <div className="lg:col-span-4 space-y-10 mt-5 sm:mt-0 sm:ml-10">
                         <div>
                             <div className="text-slate-600 font-bold text-lg sm:text-xl">
                                 Author

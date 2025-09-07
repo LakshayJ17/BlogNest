@@ -9,6 +9,7 @@ export const Blog = () => {
     const { loading, blog } = useBlog({
         id: id || ""
     })
+
     if (loading || !blog) {
         return <div>
             <Appbar navigateTo="/" label="BlogNest" />
@@ -20,6 +21,7 @@ export const Blog = () => {
         </div>
 
     }
+    
     return <div>
         <FullBlog blog={blog} />
     </div>

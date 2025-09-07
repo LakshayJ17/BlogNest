@@ -117,7 +117,7 @@ export const BlogCard = ({
   };
 
   return (
-    <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200">
+    <div className="group p-6 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition duration-200 shadow h-full flex flex-col">
       <div className="flex items-center text-xs text-slate-500 mb-2">
         <Avatar name={author.name} authorData={author} />
         <span className="ml-2">{author.name}</span>

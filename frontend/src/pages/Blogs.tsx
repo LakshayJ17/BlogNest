@@ -6,6 +6,7 @@ import { useBlogs } from "../hooks";
 import { Link, useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { useAuthStore } from "../store/auth";
+import { motion } from "motion/react";
 
 export const Blogs = () => {
     const [search, setSearch] = useState("");
@@ -36,7 +37,7 @@ export const Blogs = () => {
     return (
         <div className="min-h-screen overflow-x-hidden bg-gray-50">
             <Appbar
-                navigateTo="/blogs"
+                navigateTo={user ? "/blogs" : "/"}
                 label="BlogNest"
                 buttons={
                     <div className="flex items-center gap-5">
@@ -118,22 +119,43 @@ export const Blogs = () => {
                     </div>
                 ) : (
                     <div className="w-full max-w-screen-md flex flex-col gap-6">
-                        {blogs.map((blog) => (
-                            <BlogCard
-                                type="publish"
-                                key={blog.id}
-                                id={blog.id}
-                                author={blog.author}
-                                authorId={blog.authorId}
-                                currentUserId={user?.id}
-                                title={blog.title}
-                                content={blog.content}
-                                publishedDate={blog.date}
-                                _count={blog._count}
-                                labels={blog.labels}
-                                status={blog.status}
-                                currentUserRole={user?.role ?? ""}
-                            />
+                        {blogs.map((blog, idx) => (
+                            <motion.div
+                                initial={{
+                                    opacity: 0,
+                                    filter: "blur(10px)",
+                                    y: 10,
+                                }}
+                                whileInView={{
+                                    opacity: 1,
+                                    filter: "blur(0px)",
+                                    y: 0,
+                                }}
+                                transition={{
+                                    duration: 0.3,
+                                    delay: idx * 0.1,
+                                    ease: "easeInOut",
+                                }}
+                                key={blog.title}
+                                className="group relative"
+                            >
+                                {" "}
+                                <BlogCard
+                                    type="publish"
+                                    key={blog.id}
+                                    id={blog.id}
+                                    author={blog.author}
+                                    authorId={blog.authorId}
+                                    currentUserId={user?.id}
+                                    title={blog.title}
+                                    content={blog.content}
+                                    publishedDate={blog.date}
+                                    _count={blog._count}
+                                    labels={blog.labels}
+                                    status={blog.status}
+                                    currentUserRole={user?.role ?? ""}
+                                />
+                            </motion.div>
                         ))}
                     </div>
                 )}
