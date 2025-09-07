@@ -12,10 +12,10 @@ export const ProfilePage = () => {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center space-y-4 mb-10">
                     <Avatar name={name} authorData={user} size="big" />
-                    <h1 className="text-2xl font-bold">{user?.name}</h1>
-                    <p className="text-gray-500">{user?.email}</p>
-                    <p className="text-gray-600 text-center">{user?.bio}</p>
-                    <p className="text-sm text-gray-400">
+                    <h1 className="text-2xl font-bold text-center break-words">{user?.name}</h1>
+                    <p className="text-gray-500 text-center break-words">{user?.email}</p>
+                    <p className="text-gray-600 text-center break-words">{user?.bio}</p>
+                    <p className="text-sm text-gray-400 text-center">
                         Joined on{" "}
                         {user?.joinedAt
                             ? new Date(user.joinedAt).toLocaleDateString("en-US", {
@@ -27,8 +27,8 @@ export const ProfilePage = () => {
                     </p>
                 </div>
                 <div>
-                    <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
-                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+                    <h2 className="text-xl font-semibold mb-4 text-center sm:text-left">Your Posts</h2>
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
                         {user?.posts?.length ? (
                             user.posts.map((blog) => (
                                 <BlogCard
