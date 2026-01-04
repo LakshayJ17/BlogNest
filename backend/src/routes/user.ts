@@ -4,6 +4,8 @@ import { signupInput, signinInput } from "@lakshayj17/common-app";
 import bcrypt from 'bcryptjs';
 import { Request, Response } from "express";
 import { PrismaClient } from '@prisma/client'
+import rateLimit from "express-rate-limit";
+import { authLimiter } from "../rate-limiters";
 
 export const userRouter = express.Router();
 
@@ -11,7 +13,7 @@ const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
-userRouter.post("/signup", async (req: Request, res: Response) => {
+userRouter.post("/signup", authLimiter, async (req: Request, res: Response) => {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
 
@@ -50,7 +52,7 @@ userRouter.post("/signup", async (req: Request, res: Response) => {
     }
 });
 
-userRouter.post("/signin", async (req: Request, res: Response) => {
+userRouter.post("/signin",authLimiter, async (req: Request, res: Response) => {
     // zod validation
     const body = req.body;
     const { success } = signinInput.safeParse(body);
@@ -142,7 +144,7 @@ userRouter.get("/me", async (req: Request, res: Response) => {
                         labels: true,
                         date: true,
                         _count: {
-                            select: {likes: true}
+                            select: { likes: true }
                         }
                     },
                 },
@@ -170,7 +172,7 @@ userRouter.get("/me", async (req: Request, res: Response) => {
             bio: user.bio,
             posts: user.posts,
             likes: user.likes,
-            joinedAt : user.joinedAt,
+            joinedAt: user.joinedAt,
             role: user.role
         });
     } catch (error) {

@@ -5,13 +5,17 @@ import OpenAI from "openai";
 import { Request, Response, NextFunction } from "express";
 // import jwt from 'jsonwebtoken'
 import { AuthRequest, requireAuth } from "../middleware";
-
+import apicache from "apicache"
 export const blogRouter = express.Router();
+import rateLimit from "express-rate-limit";
+import { aiLimiter, readLimiter } from "../rate-limiters";
 
 const prisma = new PrismaClient();
 
 // const JWT_SECRET = process.env.JWT_SECRET as string;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
+
+const cache = apicache.middleware;
 
 // interface AuthRequest extends Request {
 //     userId?: string;
@@ -157,7 +161,7 @@ blogRouter.put('/publish', requireAuth("user"), async (req: AuthRequest, res: Re
 })
 
 // Get all blogs 
-blogRouter.get('/bulk', async (req: Request, res: Response) => {
+blogRouter.get('/bulk', readLimiter, cache("5 minutes"), async (req: Request, res: Response) => {
     const q = req.query.q as string || ""
     const label = req.query.label as string;
 
@@ -209,6 +213,7 @@ blogRouter.get('/bulk', async (req: Request, res: Response) => {
             posts
         });
     } catch (error) {
+        console.log("Error : ", error)
         return res.status(400).json({ error: "Error fetching posts" });
     }
 
@@ -419,7 +424,7 @@ blogRouter.get('/:id/liked', requireAuth("user"), async (req: AuthRequest, res: 
 });
 
 // Make ai post
-blogRouter.post('/ai-post', requireAuth("user"), async (req: Request, res: Response) => {
+blogRouter.post('/ai-post', aiLimiter, requireAuth("user"), async (req: Request, res: Response) => {
     const { title } = req.body;
 
     if (!title) {
@@ -515,7 +520,7 @@ blogRouter.post("/report/:id", requireAuth("user"), async (req: AuthRequest, res
                 id: postId
             },
             data: {
-                isReported : true,
+                isReported: true,
                 numberOfReports: post.numberOfReports + 1
             }
         })
