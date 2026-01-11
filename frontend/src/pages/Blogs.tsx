@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { useAuthStore } from "../store/auth";
 import { motion } from "motion/react";
+import { Helmet } from "react-helmet-async";
 
 export const Blogs = () => {
     const [search, setSearch] = useState("");
@@ -35,10 +36,40 @@ export const Blogs = () => {
     }
 
     return (
-        <div className="min-h-screen overflow-x-hidden bg-gray-50">
-            <Appbar
-                navigateTo={user ? "/blogs" : "/"}
-                label="BlogNest"
+        <>
+            <Helmet>
+                <title>Explore Blogs | BlogNest - Discover Stories & Insights</title>
+                <meta
+                    name="description"
+                    content="Discover and explore blogs on BlogNest. Read stories about technology, AI, entertainment, sports, music, space, and more from our community of writers."
+                />
+                <meta
+                    name="keywords"
+                    content="blog posts, read blogs, discover stories, technology blogs, AI articles, entertainment news, sports blogs, music blogs, online articles, BlogNest"
+                />
+                <meta property="og:type" content="website" />
+                <meta
+                    property="og:title"
+                    content="Explore Blogs | BlogNest"
+                />
+                <meta
+                    property="og:description"
+                    content="Discover and read blogs from our community of writers on technology, AI, entertainment, and more."
+                />
+                <meta
+                    property="og:url"
+                    content="https://blognest.bylakshayjain.online/blogs"
+                />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Explore Blogs | BlogNest" />
+                <meta name="twitter:description" content="Discover and read blogs from our community of writers." />
+                <link rel="canonical" href="https://blognest.bylakshayjain.online/blogs" />
+            </Helmet>
+
+            <div className="min-h-screen overflow-x-hidden bg-gray-50">
+                <Appbar
+                    navigateTo={user ? "/blogs" : "/"}
+                    label="BlogNest"
                 buttons={
                     <div className="flex items-center gap-5">
                         <Link to={"/drafts"}>Drafts</Link>
@@ -161,5 +192,7 @@ export const Blogs = () => {
                 )}
             </div>
         </div>
+        </>
+
     );
 };
