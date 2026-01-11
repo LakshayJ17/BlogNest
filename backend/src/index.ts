@@ -11,6 +11,8 @@ const app = express();
 
 app.use(cors({
   origin: ["http://localhost:5173", "https://blognest-project.vercel.app", "https://blognest.bylakshayjain.online"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
 app.use(express.json());

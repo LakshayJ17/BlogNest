@@ -4,7 +4,6 @@ import { signupInput, signinInput } from "@lakshayj17/common-app";
 import bcrypt from 'bcryptjs';
 import { Request, Response } from "express";
 import { PrismaClient } from '@prisma/client'
-import rateLimit from "express-rate-limit";
 import { authLimiter } from "../rate-limiters";
 
 export const userRouter = express.Router();
@@ -52,7 +51,7 @@ userRouter.post("/signup", authLimiter, async (req: Request, res: Response) => {
     }
 });
 
-userRouter.post("/signin",authLimiter, async (req: Request, res: Response) => {
+userRouter.post("/signin", authLimiter, async (req: Request, res: Response) => {
     // zod validation
     const body = req.body;
     const { success } = signinInput.safeParse(body);
