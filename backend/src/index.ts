@@ -17,6 +17,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/blog", blogRouter);
 app.use("/api/v1/admin", adminRouter);
