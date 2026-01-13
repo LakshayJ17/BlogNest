@@ -43,7 +43,9 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>BlogNest | AI-Powered Blogging Platform - Write, Share & Discover</title>
+        <title>
+          BlogNest | AI-Powered Blogging Platform - Write, Share & Discover
+        </title>
         <meta
           name="description"
           content="BlogNest is your AI-powered blogging platform. Write without limits, generate content with AI, get instant summaries, and connect with a vibrant community of writers and readers."
@@ -65,14 +67,26 @@ export default function Home() {
           property="og:url"
           content="https://blognest.bylakshayjain.online/"
         />
-        <meta property="og:image" content="https://blognest.bylakshayjain.online/heroimage.webp" />
+        <meta
+          property="og:image"
+          content="https://blognest.bylakshayjain.online/heroimage.webp"
+        />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="BlogNest | AI-Powered Blogging Platform" />
-        <meta name="twitter:description" content="Write, discover, and share stories with AI-powered tools." />
-        <meta name="twitter:image" content="https://blognest.bylakshayjain.online/heroimage.webp" />
+        <meta
+          name="twitter:title"
+          content="BlogNest | AI-Powered Blogging Platform"
+        />
+        <meta
+          name="twitter:description"
+          content="Write, discover, and share stories with AI-powered tools."
+        />
+        <meta
+          name="twitter:image"
+          content="https://blognest.bylakshayjain.online/heroimage.webp"
+        />
         <link rel="canonical" href="https://blognest.bylakshayjain.online/" />
       </Helmet>
-      
+
       <div className="flex flex-col w-full">
         <div
           className="flex flex-col items-center justify-center min-h-screen w-full bg-[f8fafc] relative"
@@ -165,11 +179,15 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end aspect-auto">
                   <img
                     src="/heroimage.webp"
                     alt="hero-image"
+                    width={1200}
+                    height={800}
                     className="max-w-full h-auto w-full sm:w-96 md:w-full"
+                    loading="eager"
+                    fetchPriority="high"
                   />
                 </div>
               </div>
