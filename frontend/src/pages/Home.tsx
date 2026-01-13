@@ -65,11 +65,11 @@ export default function Home() {
           property="og:url"
           content="https://blognest.bylakshayjain.online/"
         />
-        <meta property="og:image" content="https://blognest.bylakshayjain.online/heroimage.png" />
+        <meta property="og:image" content="https://blognest.bylakshayjain.online/heroimage.webp" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="BlogNest | AI-Powered Blogging Platform" />
         <meta name="twitter:description" content="Write, discover, and share stories with AI-powered tools." />
-        <meta name="twitter:image" content="https://blognest.bylakshayjain.online/heroimage.png" />
+        <meta name="twitter:image" content="https://blognest.bylakshayjain.online/heroimage.webp" />
         <link rel="canonical" href="https://blognest.bylakshayjain.online/" />
       </Helmet>
       
@@ -167,7 +167,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-end">
                   <img
-                    src="/heroimage.png"
+                    src="/heroimage.webp"
                     alt="hero-image"
                     className="max-w-full h-auto w-full sm:w-96 md:w-full"
                   />
