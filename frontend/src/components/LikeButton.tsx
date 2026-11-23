@@ -1,39 +1,45 @@
-import { Heart } from "lucide-react";
-import { useState } from "react";
+import { Heart } from "@phosphor-icons/react";
+import { cn } from "../lib/utils";
 
 interface LikeButtonProps {
   liked: boolean;
   likes: number;
   onClick: () => void;
+  disabled?: boolean;
+  className?: string;
 }
 
-export const LikeButton = ({ liked, likes, onClick }: LikeButtonProps) => {
-  const [animating, setAnimating] = useState(false);
+export const LikeButton = ({ liked, likes, onClick, disabled, className }: LikeButtonProps) => {
+  const count = `${likes} ${likes === 1 ? "like" : "likes"}`;
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setAnimating(true);
-    onClick();
-    setTimeout(() => setAnimating(false), 200); 
-  };
+  if (disabled) {
+    return (
+      <span className={cn("inline-flex items-center gap-1.5 font-mono text-xs text-muted", className)}>
+        <Heart size={16} aria-hidden="true" />
+        {likes}
+      </span>
+    );
+  }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
-      <button
-        onClick={handleClick}
-        aria-label={liked ? "Unlike post" : "Like post"}
-        className="focus:outline-none"
-      >
-        <Heart
-          fill={liked ? "#ef4444" : "none"} 
-          color={liked ? "#ef4444" : "currentColor"}
-          className={`w-6 h-6 transition-all duration-300 ease-in-out 
-            ${animating ? "scale-125" : "scale-100"} 
-            ${liked ? "drop-shadow-md" : ""}
-          `}
-        />
-      </button>
-      <span>{likes} {likes === 1 ? "like" : "likes"}</span>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={liked}
+      aria-label={`${liked ? "Unlike" : "Like"} this story, ${count}`}
+      className={cn(
+        "focus-ring group/like relative z-10 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md px-2 font-mono text-xs tabular-nums transition-colors",
+        liked ? "text-tag-red hover:bg-tag-red-bg" : "text-muted hover:bg-bone hover:text-ink",
+        className
+      )}
+    >
+      <Heart
+        size={17}
+        weight={liked ? "fill" : "regular"}
+        aria-hidden="true"
+        className="transition-transform duration-200 group-active/like:scale-125"
+      />
+      {likes}
+    </button>
   );
 };

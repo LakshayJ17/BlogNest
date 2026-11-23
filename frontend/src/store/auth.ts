@@ -1,94 +1,76 @@
-import axios from 'axios';
-import { create } from 'zustand'
-import { BACKEND_URL } from '../config';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    bio: string;
-    googleId?: string;
-    avatar?: string;
-    joinedAt: string;
-    posts: Array<{
-        id: string;
-        title: string;
-        content: string;
-        status: string;
-        date: string;
-        labels: string[];
-        _count: {
-            likes: number;
-        }
-    }>;
-    likes: Array<{
-        id: string;
-        postId: string;
-        createdAt: string;
-    }>;
-    role: string;
-}
+import { create } from "zustand";
+import { toast } from "react-toastify";
+import { api, isStatus, onUnauthorized } from "../lib/api";
+import { clearToken, readToken, writeToken } from "../lib/session";
+import type { User } from "../lib/types";
 
 interface AuthState {
-    token: string | null;
-    setToken: (token: string) => void
-    logout: () => void;
-    user: User | null;
-    setUser: (user: User) => void;
-    fetchUserData: () => Promise<void>;
-    isLoading: boolean;
-    setIsLoading: (loading: boolean) => void;
+  token: string | null;
+  user: User | null;
+  /** True while the signed-in user's profile is loading. */
+  isLoading: boolean;
+  setToken: (token: string) => void;
+  logout: () => void;
+  fetchUserData: () => Promise<void>;
+  setLiked: (postId: string, liked: boolean) => void;
 }
 
+const initialToken = readToken();
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-    token: localStorage.getItem('token'),
+  token: initialToken,
+  user: null,
+  // Start in the loading state when a token exists, so guarded routes don't
+  // redirect before we know who the user is.
+  isLoading: Boolean(initialToken),
 
-    setToken: (token) => {
-        localStorage.setItem('token', token)
-        set({ token })
-    },
+  setToken: (token) => {
+    writeToken(token);
+    set({ token });
+  },
 
-    logout: () => {
-        localStorage.removeItem("token");
-        set({ token: null, user: null });
-    },
+  logout: () => {
+    clearToken();
+    set({ token: null, user: null, isLoading: false });
+  },
 
-    user: null,
+  fetchUserData: async () => {
+    if (!get().token) {
+      set({ isLoading: false });
+      return;
+    }
 
-    setUser: (user) => {
-        set({ user })
-    },
+    set({ isLoading: true });
+    try {
+      const { data } = await api.get<User>("/user/me");
+      set({ user: data });
+    } catch (error) {
+      if (isStatus(error, 401) || isStatus(error, 403) || isStatus(error, 404)) {
+        get().logout();
+      } else {
+        // Network trouble: keep the token so a reload can recover.
+        toast.error("Couldn't load your account. Check your connection and refresh.", {
+          toastId: "me-failed",
+        });
+      }
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-    isLoading: false,
+  setLiked: (postId, liked) => {
+    const user = get().user;
+    if (!user) return;
+    const ids = new Set(user.likedPostIds);
+    if (liked) ids.add(postId);
+    else ids.delete(postId);
+    set({ user: { ...user, likedPostIds: [...ids] } });
+  },
+}));
 
-    setIsLoading: (loading) => {
-        set({ isLoading: loading });
-    },
-
-    fetchUserData: async () => {
-        const { token, setIsLoading } = get();
-        if (!token) return;
-
-        setIsLoading(true);
-        try {
-            const response = await axios.get(`${BACKEND_URL}/api/v1/user/me`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            if (response.status === 200) {
-                const userData = response.data;
-                set({ user: userData })
-            } else{
-                get().logout()
-            }
-        } catch(error){
-            console.log("Error fetching user details : ", error)
-            get().logout()
-        } finally {
-            setIsLoading(false);
-        }
-    },
-
-}))
+onUnauthorized(() => {
+  const { token, logout } = useAuthStore.getState();
+  if (!token) return;
+  logout();
+  toast.info("Your session has expired. Please sign in again.", { toastId: "session-expired" });
+});

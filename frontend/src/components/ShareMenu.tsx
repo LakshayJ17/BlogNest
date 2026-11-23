@@ -1,72 +1,53 @@
-import { useEffect, useRef, useState } from "react";
-import { Share2, Copy } from "lucide-react";
-import {
-    FacebookShareButton,
-    TwitterShareButton,
-    WhatsappShareButton,
-    FacebookIcon,
-    TwitterIcon,
-    WhatsappIcon,
-} from "react-share";
+import { FacebookLogo, LinkSimple, LinkedinLogo, ShareNetwork, WhatsappLogo, XLogo } from "@phosphor-icons/react";
+import { toast } from "react-toastify";
+import { Menu } from "./ui/Menu";
+import { buttonClasses } from "./ui/button";
 
 export function ShareMenu({ url, title }: { url: string; title: string }) {
-    const [open, setOpen] = useState(false);
-    const [copied, setCopied] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
 
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-    };
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Couldn't copy the link. Copy it from the address bar instead.");
+    }
+  };
 
-    useEffect(() => {
-        if (!open) return;
-
-        function handleClickOutside(event: MouseEvent) {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [open]);
-
-
+  // Use the device's share sheet where available (most phones).
+  const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  if (canNativeShare && window.matchMedia("(pointer: coarse)").matches) {
     return (
-        <div className="relative inline-block" ref={menuRef}>
-            <button
-                onClick={() => setOpen((v) => !v)}
-                className="p-2 rounded-full bg-neutral-200 hover:bg-neutral-300 transition text-center cursor-pointer"
-                title="Share"
-            >
-                <Share2 size={20} />
-            </button>
-            {open && (
-                <div className="absolute z-10 mt-2 right-0 bg-white border rounded-lg shadow-lg p-4 flex flex-col items-center gap-3 min-w-[180px]">
-                    <button
-                        onClick={handleCopy}
-                        className="flex items-center gap-2 px-3 py-1 rounded bg-neutral-100 hover:bg-neutral-200 transition text-sm w-full"
-                    >
-                        <Copy size={16} />
-                        {copied ? "Copied!" : "Copy Link"}
-                    </button>
-                    <div className="flex gap-2 pt-2">
-                        <FacebookShareButton url={url} title={title}>
-                            <FacebookIcon size={32} round />
-                        </FacebookShareButton>
-                        <TwitterShareButton url={url} title={title}>
-                            <TwitterIcon size={32} round />
-                        </TwitterShareButton>
-                        <WhatsappShareButton url={url} title={title}>
-                            <WhatsappIcon size={32} round />
-                        </WhatsappShareButton>
-                    </div>
-                </div>
-            )}
-        </div>
+      <button
+        type="button"
+        onClick={() => navigator.share({ title, url }).catch(() => undefined)}
+        className={buttonClasses({ variant: "ghost", size: "sm" })}
+      >
+        <ShareNetwork size={16} aria-hidden="true" />
+        Share
+      </button>
     );
+  }
+
+  return (
+    <Menu
+      label="Share this story"
+      triggerClassName={buttonClasses({ variant: "ghost", size: "sm" })}
+      trigger={
+        <>
+          <ShareNetwork size={16} aria-hidden="true" />
+          Share
+        </>
+      }
+      items={[
+        { label: "Copy link", icon: LinkSimple, onSelect: copyLink },
+        { label: "Share on X", icon: XLogo, href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}` },
+        { label: "Share on LinkedIn", icon: LinkedinLogo, href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+        { label: "Share on Facebook", icon: FacebookLogo, href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+        { label: "Share on WhatsApp", icon: WhatsappLogo, href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` },
+      ]}
+    />
+  );
 }

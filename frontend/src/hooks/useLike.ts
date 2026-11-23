@@ -1,65 +1,47 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { BACKEND_URL } from "../config";
 import { toast } from "react-toastify";
+import { api, getErrorMessage } from "../lib/api";
 import { useAuthStore } from "../store/auth";
 
-export const useLike = (
-  postId: string,
-  initialLikes: number,
-  options?: { disabled?: boolean }
-) => {
-  const [liked, setLiked] = useState(false);
+/**
+ * Like state comes from the signed-in user's profile (likedPostIds), so no
+ * per-post request is needed. Updates are optimistic and roll back on error.
+ */
+export const useLike = (postId: string, initialLikes: number, options?: { disabled?: boolean }) => {
+  const user = useAuthStore((s) => s.user);
+  const setLiked = useAuthStore((s) => s.setLiked);
   const [likes, setLikes] = useState(initialLikes);
-  const { token, user } = useAuthStore();
+  const [pending, setPending] = useState(false);
 
-  const disabled = options?.disabled || user?.role === "admin";
+  useEffect(() => setLikes(initialLikes), [initialLikes]);
 
-  useEffect(() => {
-    if (!token || !postId || disabled) return;
-
-    axios
-      .get(`${BACKEND_URL}/api/v1/blog/${postId}/liked`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        setLiked(response.data.liked);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch liked status:", err);
-        toast.error("Could not fetch like status 😿");
-      });
-  }, [postId, token, disabled]);
+  const disabled = Boolean(options?.disabled) || user?.role === "admin";
+  const liked = Boolean(user?.likedPostIds?.includes(postId));
 
   const toggleLike = async () => {
-    if (disabled) return;
-    if (!token) {
-      toast.error("Please sign in to like the post.");
+    if (disabled || pending) return;
+    if (!user) {
+      toast.info("Sign in to like stories.", { toastId: "like-signin" });
       return;
     }
 
-    try {
-      const res = await axios.post(
-        `${BACKEND_URL}/api/v1/blog/${postId}/like`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const next = !liked;
+    setLiked(postId, next);
+    setLikes((count) => Math.max(0, count + (next ? 1 : -1)));
+    setPending(true);
 
-      const newLiked = res.data.liked;
-      setLiked(newLiked);
-      setLikes((prev) => (newLiked ? prev + 1 : prev - 1));
-      toast.success(newLiked ? "You liked the post ❤️" : "You unliked the post 💔");
-    } catch (err) {
-      console.error("Failed to toggle like:", err);
-      toast.error("An error occurred while liking the post.");
+    try {
+      const { data } = await api.post<{ liked: boolean; likes: number }>(`/blog/${postId}/like`);
+      setLiked(postId, data.liked);
+      setLikes(data.likes);
+    } catch (error) {
+      setLiked(postId, !next);
+      setLikes((count) => Math.max(0, count + (next ? -1 : 1)));
+      toast.error(getErrorMessage(error, "Couldn't update your like."));
+    } finally {
+      setPending(false);
     }
   };
 
-  return { liked, likes, toggleLike };
+  return { liked, likes, toggleLike, disabled };
 };

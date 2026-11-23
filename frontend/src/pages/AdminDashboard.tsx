@@ -1,132 +1,215 @@
-import { useAuthStore } from "../store/auth";
-import { useEffect, useState } from "react";
-import { Appbar } from "../components/Appbar";
-import { Unauthorized } from "../components/Unauthorized";
-import axios from "axios";
-import { BACKEND_URL } from "../config";
-import { useBlogs } from "../hooks";
-import { BlogCard } from "../components/BlogCard";
-import { motion } from "motion/react"
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { toast } from "react-toastify";
+import { Flag, ShieldCheck } from "@phosphor-icons/react";
+import { api, getErrorMessage } from "../lib/api";
+import type { PostPreview } from "../lib/types";
+import { PageShell } from "../components/PageShell";
+import { Avatar } from "../components/Avatar";
+import { PostedDate } from "../components/PostedDate";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { EmptyState, ErrorState } from "../components/EmptyState";
+import { buttonClasses } from "../components/ui/button";
+
+interface Stats {
+  totalUsers: number;
+  totalBlogs: number;
+  reportedBlogs: number;
+}
 
 export const AdminDashboard = () => {
-    const { user, token, isLoading } = useAuthStore();
-    const [stats, setStats] = useState<{ totalUsers: number; totalBlogs: number }>({
-        totalUsers: 0,
-        totalBlogs: 0,
-    });
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [reported, setReported] = useState<PostPreview[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [error, setError] = useState("");
+  const [removing, setRemoving] = useState<PostPreview | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-    const { blogs, loading } = useBlogs();
-
-    useEffect(() => {
-        if (user?.role === "admin") {
-            axios.get(`${BACKEND_URL}/api/v1/admin/all-details`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => setStats(res.data))
-                .catch(() => setStats({ totalUsers: 0, totalBlogs: 0 }));
-        }
-    }, [token, user?.role]);
-
-    if (isLoading || loading) {
-        return (
-            <>
-                <Appbar navigateTo="/admin-dashboard" label="BlogNest" />
-                <div className="max-w-5xl mx-auto px-4 py-8">
-                    <h1 className="text-2xl font-bold mb-4">Welcome, BlogNest Admin</h1>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-slate-100 rounded-lg p-6 shadow flex flex-col items-center animate-pulse">
-                            <span className="h-6 w-24 bg-slate-200 rounded mb-2" />
-                            <span className="h-10 w-20 bg-slate-200 rounded" />
-                        </div>
-                        <div className="bg-slate-100 rounded-lg p-6 shadow flex flex-col items-center animate-pulse">
-                            <span className="h-6 w-24 bg-slate-200 rounded mb-2" />
-                            <span className="h-10 w-20 bg-slate-200 rounded" />
-                        </div>
-                    </div>
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold mb-2">Posts to be reviewed</h2>
-                        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
-                            {[1, 2].map((i) => (
-                                <div key={i} className="bg-white  rounded-lg p-6 shadow animate-pulse h-80 w-120" />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </>
-        );
+  const load = useCallback(async () => {
+    setStatus("loading");
+    try {
+      const [details, queue] = await Promise.all([
+        api.get<Stats>("/admin/all-details"),
+        api.get<{ posts: PostPreview[] }>("/admin/reported"),
+      ]);
+      setStats(details.data);
+      setReported(queue.data.posts);
+      setStatus("ready");
+    } catch (err) {
+      setError(getErrorMessage(err, "Couldn't load the dashboard."));
+      setStatus("error");
     }
+  }, []);
 
-    if (user?.role !== "admin") {
-        return <Unauthorized />;
-    }
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-    const reportedBlogs = blogs.filter((blog) => blog.isReported);
-
-    return (
-        <>
-            <Appbar navigateTo="/admin-dashboard" label="BlogNest" />
-            <div className="max-w-5xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold mb-4">Welcome, BlogNest Admin</h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-slate-100 rounded-lg p-6 shadow flex flex-col items-center">
-                        <span className="text-lg font-semibold text-blue-800">Total Users</span>
-                        <span className="text-3xl font-bold mt-2">{stats.totalUsers}</span>
-                    </div>
-                    <div className="bg-slate-100 rounded-lg p-6 shadow flex flex-col items-center">
-                        <span className="text-lg font-semibold text-blue-800">Total Posts</span>
-                        <span className="text-3xl font-bold mt-2">{stats.totalBlogs}</span>
-                    </div>
-                </div>
-
-                <div className="mb-6">
-                    <h2 className="text-xl font-bold mb-2">Posts to be reviewed</h2>
-                    {reportedBlogs.length === 0 ? (
-                        <div className="text-slate-500 text-center py-8">No reported posts to review.</div>
-                    ) : (
-                        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
-                            {reportedBlogs.map((blog, idx) => (
-                                <motion.div
-                                    initial={{
-                                        opacity: 0,
-                                        filter: "blur(10px)",
-                                        y: 10,
-                                    }}
-                                    whileInView={{
-                                        opacity: 1,
-                                        filter: "blur(0px)",
-                                        y: 0,
-                                    }}
-                                    transition={{
-                                        duration: 0.3,
-                                        delay: idx * 0.1,
-                                        ease: "easeInOut",
-                                    }}
-                                    key={blog.title}
-                                    className="group relative"
-                                >                                <BlogCard
-                                        type="publish"
-                                        key={blog.id}
-                                        id={blog.id}
-                                        author={blog.author}
-                                        authorId={blog.authorId}
-                                        currentUserId={user?.id}
-                                        title={blog.title}
-                                        content={blog.content}
-                                        publishedDate={blog.date}
-                                        _count={blog._count}
-                                        labels={blog.labels}
-                                        status={blog.status}
-                                        currentUserRole={user?.role}
-                                    />
-                                </motion.div>
-
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </>
+  const dropFromQueue = (id: string, removed: boolean) => {
+    setReported((current) => current.filter((p) => p.id !== id));
+    setStats((s) =>
+      s
+        ? { ...s, reportedBlogs: Math.max(0, s.reportedBlogs - 1), totalBlogs: s.totalBlogs - (removed ? 1 : 0) }
+        : s
     );
+  };
+
+  const dismiss = async (post: PostPreview) => {
+    setBusyId(post.id);
+    try {
+      await api.post(`/admin/${post.id}/dismiss`);
+      dropFromQueue(post.id, false);
+      toast.success("Reports cleared. The story stays up.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const remove = async () => {
+    if (!removing) return;
+    setBusyId(removing.id);
+    try {
+      await api.delete(`/admin/${removing.id}`);
+      dropFromQueue(removing.id, true);
+      toast.success("Story removed");
+      setRemoving(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <PageShell className="max-w-5xl">
+      <Helmet>
+        <title>Moderation | BlogNest</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
+
+      <header className="border-b border-line-strong pb-6">
+        <p className="kicker">Admin</p>
+        <h1 className="mt-3 font-serif text-[2.75rem] font-medium leading-[1.05] tracking-[-0.025em] text-ink">Moderation</h1>
+      </header>
+
+      {status === "error" && (
+        <div className="mt-8">
+          <ErrorState message={error} onRetry={load} />
+        </div>
+      )}
+
+      {status !== "error" && (
+        <>
+          <dl className="grid grid-cols-3 divide-x divide-line border-b border-line">
+            <StatCard label="Members" value={stats?.totalUsers} />
+            <StatCard label="Published stories" value={stats?.totalBlogs} />
+            <StatCard label="Open reports" value={stats?.reportedBlogs} alert />
+          </dl>
+
+          <section className="mt-14" aria-labelledby="queue-heading" aria-busy={status === "loading"}>
+            <div className="flex items-baseline justify-between border-b border-line pb-3">
+              <h2 id="queue-heading" className="font-serif text-2xl font-medium tracking-[-0.01em] text-ink">
+                Review queue
+              </h2>
+              <p className="font-mono text-xs text-muted">Most reported first</p>
+            </div>
+
+            {status === "loading" && (
+              <div className="divide-y divide-line" aria-hidden="true">
+                {[0, 1].map((i) => (
+                  <div key={i} className="animate-pulse py-7">
+                    <div className="h-3 w-40 rounded-full bg-line" />
+                    <div className="mt-4 h-5 w-2/3 rounded bg-line" />
+                    <div className="mt-3 h-3 w-full rounded-full bg-bone" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {status === "ready" && reported.length === 0 && (
+              <EmptyState
+                className="border-t-0"
+                icon={ShieldCheck}
+                title="Nothing to review"
+                description="No one has reported a story. New reports show up here."
+              />
+            )}
+
+            {status === "ready" && reported.length > 0 && (
+              <ul className="divide-y divide-line border-b border-line">
+                {reported.map((post) => (
+                  <li key={post.id} className="grid gap-5 py-7 md:grid-cols-[1fr_auto] md:gap-10">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-tag-red-bg px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.08em] text-tag-red uppercase">
+                          <Flag size={11} weight="fill" aria-hidden="true" />
+                          {post.numberOfReports} {post.numberOfReports === 1 ? "report" : "reports"}
+                        </span>
+                        <span className="flex items-center gap-2 text-[13px] text-muted">
+                          <Avatar name={post.author?.name ?? "Anonymous"} src={post.author?.avatar} size="xs" />
+                          {post.author?.name}
+                          <span aria-hidden="true" className="text-faint">/</span>
+                          <PostedDate date={post.date} className="font-mono text-xs" />
+                        </span>
+                      </div>
+                      <h3 className="mt-3 font-serif text-[1.375rem] font-semibold leading-snug tracking-[-0.01em] text-ink">
+                        <Link to={`/blog/${post.id}`} className="link-draw focus-ring rounded-sm">
+                          {post.title}
+                        </Link>
+                      </h3>
+                      <p className="mt-2 line-clamp-2 font-serif text-[1.0625rem] leading-relaxed text-muted">{post.excerpt}</p>
+                    </div>
+                    <div className="flex flex-wrap items-start gap-2 md:flex-col md:items-stretch">
+                      <button
+                        type="button"
+                        onClick={() => dismiss(post)}
+                        disabled={busyId === post.id}
+                        className={buttonClasses({ variant: "secondary", size: "sm" })}
+                      >
+                        Keep, clear reports
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRemoving(post)}
+                        disabled={busyId === post.id}
+                        className={buttonClasses({ variant: "danger", size: "sm" })}
+                      >
+                        Remove story
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+
+      {removing && (
+        <ConfirmDialog
+          open
+          title="Remove this story?"
+          description={`"${removing.title}" will be taken down for everyone.`}
+          confirmLabel="Remove"
+          busy={busyId === removing.id}
+          onConfirm={remove}
+          onCancel={() => setRemoving(null)}
+        />
+      )}
+    </PageShell>
+  );
 };
+
+function StatCard({ label, value, alert }: { label: string; value?: number; alert?: boolean }) {
+  return (
+    <div className="px-4 py-6 first:pl-0 sm:px-6">
+      <dt className="font-mono text-[11px] tracking-[0.12em] text-muted uppercase">{label}</dt>
+      <dd className={`mt-2 font-serif text-4xl font-medium tabular-nums ${alert && value ? "text-tag-red" : "text-ink"}`}>
+        {value ?? <span className="inline-block h-9 w-12 animate-pulse rounded bg-line" />}
+      </dd>
+    </div>
+  );
+}
