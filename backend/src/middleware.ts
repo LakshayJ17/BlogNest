@@ -1,46 +1,69 @@
-import { PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken"
-
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET as string;
+import jwt from "jsonwebtoken";
+import { Role } from "@prisma/client";
+import { env } from "./env";
+import { prisma } from "./lib/prisma";
 
 export interface AuthRequest extends Request {
     userId?: string;
+    userRole?: Role;
 }
 
-export function requireAuth(role: "admin" | "user") {
-    return async (req: AuthRequest, res: Response, next: NextFunction) => {
-        const authHeader = req.headers['authorization'];
+export function signToken(userId: string): string {
+    return jwt.sign({ id: userId }, env.jwtSecret, {
+        algorithm: "HS256",
+        expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
+    });
+}
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ error: "Unauthorized" });
+/** Returns the user id from a valid Bearer token, or null. */
+function readUserId(req: Request): string | null {
+    const header = req.headers.authorization;
+    if (!header?.startsWith("Bearer ")) return null;
+
+    try {
+        const payload = jwt.verify(header.slice(7), env.jwtSecret, { algorithms: ["HS256"] });
+        if (typeof payload === "object" && typeof payload.id === "string") {
+            return payload.id;
         }
+    } catch {
+        // Expired or tampered token: treat as signed out.
+    }
+    return null;
+}
 
-        const token = authHeader.split(" ")[1];
-        let userId;
-
-        try {
-            const payload = jwt.verify(token, JWT_SECRET) as { id: string };
-            userId = payload.id;
-        } catch (err) {
-            return res.status(401).json({ error: "Invalid or expired token" });
+/**
+ * Require a signed-in user. Pass a role to restrict the route to that role;
+ * omit it to allow any signed-in user.
+ */
+export function requireAuth(role?: Role) {
+    return async (req: AuthRequest, res: Response, next: NextFunction) => {
+        const userId = readUserId(req);
+        if (!userId) {
+            return res.status(401).json({ error: "Please sign in to continue." });
         }
 
         const user = await prisma.user.findUnique({
-            where: {
-                id : userId
-            },
-            select: {
-                role: true
-            }
-        })
+            where: { id: userId },
+            select: { role: true },
+        });
 
-        if (!user || user.role !== role){
-            return res.status(403).json({error : "Unauthorized"})
+        if (!user) {
+            return res.status(401).json({ error: "Your session has expired. Please sign in again." });
+        }
+        if (role && user.role !== role) {
+            return res.status(403).json({ error: "You don't have permission to do that." });
         }
 
         req.userId = userId;
+        req.userRole = user.role;
         next();
-    }
+    };
+}
+
+/** Attach the user id when a valid token is present, without requiring one. */
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {
+    const userId = readUserId(req);
+    if (userId) req.userId = userId;
+    next();
 }

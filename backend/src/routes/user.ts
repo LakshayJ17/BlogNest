@@ -1,182 +1,170 @@
-import express from "express";
-import jwt from "jsonwebtoken"
-import { signupInput, signinInput } from "@lakshayj17/common-app";
-import bcrypt from 'bcryptjs';
-import { Request, Response } from "express";
-import { PrismaClient } from '@prisma/client'
-import { authLimiter } from "../rate-limiters";
+import { Router, Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import { OAuth2Client, TokenPayload } from "google-auth-library";
+import { env } from "../env";
+import { prisma } from "../lib/prisma";
+import { HttpError, parseInput } from "../lib/errors";
+import { googleAuthSchema, MAX_LIST_POSTS, signinSchema, signupSchema } from "../lib/validation";
+import { withPreview } from "../lib/html";
+import { AuthRequest, requireAuth, signToken } from "../middleware";
+import { loginLimiter, signupLimiter } from "../rate-limiters";
 
-export const userRouter = express.Router();
+export const userRouter = Router();
 
-const prisma = new PrismaClient();
+const BCRYPT_ROUNDS = 10;
+const googleClient = env.googleClientId ? new OAuth2Client(env.googleClientId) : null;
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+// Compared against when the email is unknown, so a missing account takes as
+// long to reject as a wrong password (prevents account discovery by timing).
+const DUMMY_HASH = bcrypt.hashSync("blognest-timing-equalizer", BCRYPT_ROUNDS);
 
-userRouter.post("/signup", authLimiter, async (req: Request, res: Response) => {
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
+/**
+ * Exact, case-insensitive email lookup. Older accounts were stored as typed,
+ * so compare lower(email).
+ *
+ * Do NOT use Prisma's `mode: "insensitive"` for this: on Postgres it becomes
+ * ILIKE, where "_" and "%" are wildcards, so "alice_smith@x.com" would match
+ * "alice.smith@x.com" and Google sign-in would hand out the wrong account.
+ */
+async function findUserByEmail(email: string) {
+    const rows = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "User"
+        WHERE lower(email) = lower(${email})
+        ORDER BY (email = ${email}) DESC
+        LIMIT 1`;
+    return rows[0] ? prisma.user.findUnique({ where: { id: rows[0].id } }) : null;
+}
 
-    const body = req.body;
-    const { success } = signupInput.safeParse(body);
+userRouter.post("/signup", signupLimiter, async (req: Request, res: Response) => {
+    const { name, email, password } = parseInput(signupSchema, req.body);
 
-    if (!success) {
-        return res.status(400).json({ error: "Invalid email or password" });
+    if (await findUserByEmail(email)) {
+        throw new HttpError(409, "An account with this email already exists. Try signing in.");
     }
 
-    const hashedPassword = await bcrypt.hash(body.password, salt);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const user = await prisma.user.create({
+        data: { name: name || "Anonymous", email, hashedPassword },
+    });
 
-    try {
-        const existingUser = await prisma.user.findUnique({
-            where: {
-                email: body.email
-            }
-        })
-        if (existingUser) {
-            res.status(409);
-            return res.json({ error: "Email already exits" })
-        }
-
-        const user = await prisma.user.create({
-            data: {
-                name: body.name || "Anonymous",
-                email: body.email,
-                hashedPassword: hashedPassword
-            },
-        });
-
-        const token = jwt.sign({ id: user.id }, JWT_SECRET);
-        return res.json({ jwt: token });
-    } catch (error) {
-        return res.status(400).json({ error: "Error creating user" });
-    }
+    res.status(201).json({ jwt: signToken(user.id), role: user.role });
 });
 
-userRouter.post("/signin", authLimiter, async (req: Request, res: Response) => {
-    // zod validation
-    const body = req.body;
-    const { success } = signinInput.safeParse(body);
-    if (!success) {
-        return res.status(400).json({ error: "Invalid input" });
+userRouter.post("/signin", loginLimiter, async (req: Request, res: Response) => {
+    const { email, password } = parseInput(signinSchema, req.body);
+
+    const user = await findUserByEmail(email);
+    const passwordMatches = await bcrypt.compare(password, user?.hashedPassword ?? DUMMY_HASH);
+
+    // One message for every failure, so the response never reveals which
+    // emails have accounts.
+    if (!user || !user.hashedPassword || !passwordMatches) {
+        throw new HttpError(401, "Incorrect email or password.");
     }
 
-    try {
-        const user = await prisma.user.findUnique({
-            where: {
-                email: body.email
-            },
-        });
-
-        if (!user) {
-            return res.status(403).json({ error: "User not found" });
-        }
-
-        if (!user.hashedPassword) {
-            return res.status(400).json({ error: "User does not have a password set" });
-        }
-
-        const passwordMatches = await bcrypt.compare(body.password, user.hashedPassword);
-        if (!passwordMatches) {
-            return res.status(403).json({ error: "Invalid password" });
-        }
-
-        const token = jwt.sign({ id: user.id }, JWT_SECRET);
-        return res.json({ jwt: token, role: user.role });
-    } catch (error) {
-        console.log("Error in signin", error);
-        return res.status(400).json({ error: "Error signing in" });
-    }
+    res.json({ jwt: signToken(user.id), role: user.role });
 });
 
-userRouter.post("/google-auth", async (req: Request, res: Response) => {
-    const body = req.body;
-    const { email, name, googleId, avatar } = body;
-
-    if (!email || !googleId) {
-        return res.status(400).json({ error: "Email and Google ID are required" });
+userRouter.post("/google-auth", loginLimiter, async (req: Request, res: Response) => {
+    if (!googleClient) {
+        throw new HttpError(503, "Google sign-in isn't available right now.");
     }
 
-    try {
-        let user = await prisma.user.findUnique({
-            where: { email: email },
-        });
+    const { credential } = parseInput(googleAuthSchema, req.body);
 
-        if (!user) {
+    // Verify the ID token with Google. Never trust email/id claims sent by the
+    // browser: anyone could send someone else's email.
+    let payload: TokenPayload | undefined;
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: env.googleClientId,
+        });
+        payload = ticket.getPayload();
+    } catch {
+        throw new HttpError(401, "Google sign-in failed. Please try again.");
+    }
+
+    if (!payload?.sub || !payload.email || !payload.email_verified) {
+        throw new HttpError(401, "Your Google account email isn't verified.");
+    }
+
+    const email = payload.email.toLowerCase();
+    let user = await prisma.user.findUnique({ where: { googleId: payload.sub } });
+
+    if (!user) {
+        const existing = await findUserByEmail(email);
+        if (existing?.googleId) {
+            // Same email, different Google account (e.g. a reassigned work address).
+            throw new HttpError(409, "This email is already linked to a different Google account.");
+        }
+        if (existing?.hashedPassword) {
+            // Signup doesn't verify email ownership, so anyone could have created
+            // this password account. Linking it would let them keep signing in to
+            // the real owner's account with their password ("pre-hijacking").
+            throw new HttpError(
+                409,
+                "An account with this email already exists. Sign in with your email and password instead."
+            );
+        }
+        if (existing) {
+            user = await prisma.user.update({
+                where: { id: existing.id },
+                data: { googleId: payload.sub, avatar: existing.avatar ?? payload.picture ?? null },
+            });
+        } else {
             user = await prisma.user.create({
                 data: {
-                    email: email,
-                    name: name || "Google User",
-                    googleId: googleId,
-                    avatar: avatar,
+                    email,
+                    name: payload.name?.trim().slice(0, 60) || "Google User",
+                    googleId: payload.sub,
+                    avatar: payload.picture ?? null,
                 },
             });
         }
-        const token = jwt.sign({ id: user.id }, JWT_SECRET);
-        return res.json({ jwt: token });
-    } catch (error) {
-        console.log("Error during google signup/signin", error);
-        return res.status(500).json({ error: "Error in Google authentication" });
     }
+
+    res.json({ jwt: signToken(user.id), role: user.role });
 });
 
-userRouter.get("/me", async (req: Request, res: Response) => {
-    const authHeader = req.headers["authorization"];
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ error: "Authorization header required" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        const userId = (payload as any).id;
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            include: {
-                posts: {
-                    select: {
-                        id: true,
-                        title: true,
-                        content: true,
-                        status: true,
-                        labels: true,
-                        date: true,
-                        _count: {
-                            select: { likes: true }
-                        }
-                    },
-                },
-                likes: {
-                    select: {
-                        id: true,
-                        postId: true,
-                        createdAt: true,
-                    },
+userRouter.get("/me", requireAuth(), async (req: AuthRequest, res: Response) => {
+    const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            bio: true,
+            joinedAt: true,
+            role: true,
+            posts: {
+                where: { status: { in: ["draft", "published"] } },
+                orderBy: { date: "desc" },
+                // This runs on every page load; keep it bounded.
+                take: MAX_LIST_POSTS,
+                select: {
+                    id: true,
+                    title: true,
+                    content: true,
+                    status: true,
+                    labels: true,
+                    date: true,
+                    _count: { select: { likes: true } },
                 },
             },
-        });
+            likes: { select: { postId: true } },
+        },
+    });
 
-        if (!user) {
-            res.status(404);
-            return res.json({ error: "User not found" });
-        }
-
-        return res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            googleId: user.googleId,
-            avatar: user.avatar,
-            bio: user.bio,
-            posts: user.posts,
-            likes: user.likes,
-            joinedAt: user.joinedAt,
-            role: user.role
-        });
-    } catch (error) {
-        console.log("Error in /me endpoint:", error);
-        res.status(401);
-        return res.json({ error: "Invalid token" });
+    if (!user) {
+        throw new HttpError(404, "User not found.");
     }
+
+    const { posts, likes, ...profile } = user;
+    res.json({
+        ...profile,
+        posts: posts.map(withPreview),
+        likedPostIds: likes.map((like) => like.postId),
+    });
 });

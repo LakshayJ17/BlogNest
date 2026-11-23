@@ -1,533 +1,391 @@
-import express from "express";
-import { PrismaClient } from '@prisma/client'
-import { createBlogInput, updateBlogInput } from '@lakshayj17/common-app'
-import OpenAI from "openai";
-import { Request, Response, NextFunction } from "express";
-// import jwt from 'jsonwebtoken'
-import { AuthRequest, requireAuth } from "../middleware";
-import apicache from "apicache"
-export const blogRouter = express.Router();
-import rateLimit from "express-rate-limit";
-import { aiLimiter, readLimiter } from "../rate-limiters";
+import { Router, Request, Response } from "express";
+import { createHash } from "crypto";
+import apicache from "apicache";
+import { Prisma } from "@prisma/client";
+import { prisma } from "../lib/prisma";
+import { HttpError, parseInput } from "../lib/errors";
+import {
+    aiPostSchema,
+    aiSummarySchema,
+    createPostSchema,
+    listPostsQuerySchema,
+    MAX_CONTENT_LENGTH,
+    MAX_LIST_POSTS,
+    updateDraftSchema,
+    updatePublishedSchema,
+} from "../lib/validation";
+import { readingMinutes, sanitizePostHtml, tidyPunctuation, toPlainText, withPreview } from "../lib/html";
+import { AIError, aiEnabled, generateArticle, isContentFlagged, streamSummary } from "../lib/ai";
+import { AuthRequest, optionalAuth, requireAuth } from "../middleware";
+import { aiLimiter, readLimiter, reportLimiter, summaryLimiter, writeLimiters } from "../rate-limiters";
 
-const prisma = new PrismaClient();
+export const blogRouter = Router();
 
-// const JWT_SECRET = process.env.JWT_SECRET as string;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string;
-
-const cache = apicache.middleware;
-
-// interface AuthRequest extends Request {
-//     userId?: string;
-// }
-
-// async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-//     const authHeader = req.headers['authorization'];
-
-//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-//         return res.status(401).json({ error: "Unauthorized" });
-//     }
-
-//     const token = authHeader.split(" ")[1];
-
-//     try {
-//         const payload = jwt.verify(token, JWT_SECRET) as { id: string };
-//         req.userId = payload.id;
-//         return next()
-//     } catch (err) {
-//         return res.status(401).json({ error: "Invalid or expired token" });
-//     }
-// }
-
-// Draft post
-blogRouter.post('/draft', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const body = req.body;
-    const { success } = createBlogInput.safeParse(body);
-    if (!success) {
-        res.status(400);
-        return res.json({ error: "Invalid input" });
-    }
-
-    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
-
-    try {
-        const input = [body.title, body.content]
-        const moderation = await client.moderations.create({
-            model: "omni-moderation-latest",
-            input: input
-        });
-
-        if (moderation.results.some(result => result.flagged)) {
-            return res.status(400).json({ error: "Your post contains harmful or unsafe content" })
-        }
-
-        const post = await prisma.post.create({
-            data: {
-                title: body.title,
-                content: body.content,
-                authorId: userId,
-                labels: body.labels,
-                status: "draft"
-            }
-        });
-
-        return res.json({
-            id: post.id
-        });
-    } catch (error) {
-        // console.log(error)
-        res.status(400).json({ error: "Error creating post" })
-    }
-})
-
-// Post blog
-blogRouter.post('/publish', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const body = req.body;
-    const { success } = createBlogInput.safeParse(body);
-    if (!success) {
-        res.status(400);
-        return res.json({ error: "Invalid input" });
-    }
-
-    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
-
-    try {
-        const input = [body.title, body.content]
-        const moderation = await client.moderations.create({
-            model: "omni-moderation-latest",
-            input: input
-        });
-
-        if (moderation.results.some(result => result.flagged)) {
-            return res.status(400).json({ error: "Your post contains harmful or unsafe content" })
-        }
-
-        const post = await prisma.post.create({
-            data: {
-                title: body.title,
-                content: body.content,
-                authorId: userId,
-                labels: body.labels,
-                status: "published"
-            }
-        });
-
-        return res.json({
-            id: post.id
-        });
-    } catch (error) {
-        res.status(400).json({ error: "Error creating post" })
-    }
-})
-
-// Update blog content
-blogRouter.put('/publish', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-
-    const body = req.body;
-    const { success } = updateBlogInput.safeParse(body);
-    if (!success) {
-        res.status(400);
-        return res.json({ error: "Invalid input" });
-    }
-
-    try {
-        await prisma.post.update({
-            where: {
-                id: body.id,
-                authorId: userId,
-            },
-            data: {
-                title: body.title,
-                content: body.content
-            }
-        });
-
-        return res.send('updated post');
-    } catch (error) {
-        return res.status(400).json({ error: "Error updating post" })
-    }
-
-})
-
-// Get all blogs 
-blogRouter.get('/bulk', readLimiter, cache("5 minutes"), async (req: Request, res: Response) => {
-    const q = req.query.q as string || ""
-    const label = req.query.label as string;
-
-    const where: any = {
-        status: "published"
-    };
-
-    if (q) {
-        where.OR = [
-            { title: { contains: q, mode: 'insensitive' } },
-            { content: { contains: q, mode: 'insensitive' } }
-        ]
-    }
-    if (label) {
-        where.labels = { has: label }
-    }
-
-    try {
-        const posts = await prisma.post.findMany({
-            where,
-            select: {
-                id: true,
-                title: true,
-                content: true,
-                date: true,
-                authorId: true,
-                author: {
-                    select: {
-                        name: true,
-                        googleId: true,
-                        avatar: true,
-                        bio: true,
-                        role: true
-                    }
-                },
-                labels: true,
-                _count: {
-                    select: {
-                        likes: true,
-                    },
-                },
-                status: true,
-                isReported: true,
-                numberOfReports: true
-            }
-        });
-
-        return res.json({
-            posts
-        });
-    } catch (error) {
-        console.log("Error : ", error)
-        return res.status(400).json({ error: "Error fetching posts" });
-    }
-
-})
-
-blogRouter.get('/drafts', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-
-    try {
-        const drafts = await prisma.post.findMany({
-            where: {
-                status: "draft",
-                authorId: userId
-            },
-            select: {
-                id: true,
-                title: true,
-                content: true,
-                date: true,
-                status: true,
-                author: {
-                    select: {
-                        name: true,
-                        googleId: true,
-                        avatar: true,
-                        bio: true,
-                    }
-                },
-                labels: true,
-                _count: {
-                    select: {
-                        likes: true,
-                    },
-                },
-            }
-        })
-        return res.json({ drafts })
-    } catch (error) {
-        return res.status(400).json({ error: "No drafts found" })
-    }
-})
-
-blogRouter.patch('/:id', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const id = req.params.id;
-    const { title, content, labels, status } = req.body;
-    const userId = req.userId;
-
-    try {
-        const updated = await prisma.post.updateMany({
-            where: {
-                id,
-                authorId: userId,
-                status: "draft"
-            }, data: {
-                title,
-                content,
-                labels,
-                status
-            }
-        })
-
-        if (updated.count === 0) {
-            return res.status(404).json({ error: "Draft not found" })
-        }
-        return res.json({ success: true })
-    } catch (error) {
-        return res.status(400).json({ error: "Could not update draft" })
-    }
-})
-
-// Get particular blog by id 
-blogRouter.get('/:id', async (req: AuthRequest, res: Response) => {
-    const id = req.params.id;
-    const userId = req.userId;
-
-    try {
-        const post = await prisma.post.findFirst({
-            where: {
-                id,
-                OR: [
-                    { status: "published" },
-                    { status: "draft", authorId: userId }
-                ]
-            },
-            select: {
-                id: true,
-                title: true,
-                content: true,
-                date: true,
-                authorId: true,
-                author: {
-                    select: {
-                        name: true,
-                        googleId: true,
-                        avatar: true,
-                        bio: true,
-                        role: true
-                    }
-                },
-                labels: true,
-                _count: {
-                    select: {
-                        likes: true,
-                    },
-                },
-            }
-        })
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" })
-        }
-
-        return res.json({ post })
-    } catch (e) {
-        return res.status(400).json({ error: "Post not found" })
-    }
-})
-
-blogRouter.delete('/:id', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const id = req.params.id;
-    const userId = req.userId;
-
-    try {
-        const blog = await prisma.post.findUnique({
-            where: { id, authorId: userId }
-        })
-
-        if (!blog) {
-            return res.status(400).json({ error: "Post not found" })
-        }
-
-        await prisma.post.update({
-            where: { id },
-            data: { status: "deleted" }
-        })
-
-        return res.json({ success: true })
-    } catch (error) {
-        return res.status(400).json({ error: 'Error in deleting post' })
-    }
-})
-
-// Like / unlike the post
-blogRouter.post('/:id/like', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" })
-    }
-    const postId = req.params.id
-
-    try {
-        const existing = await prisma.like.findUnique({
-            where: {
-                userId_postId: {
-                    userId,
-                    postId: postId
-                }
-            }
-        })
-
-        if (existing) {
-            await prisma.like.delete({
-                where: {
-                    userId_postId: {
-                        userId: userId,
-                        postId: postId
-                    }
-                }
-            })
-            return res.json({ liked: false })
-        } else {
-            await prisma.like.create({
-                data: {
-                    userId: userId,
-                    postId: postId
-                }
-            })
-            return res.json({ liked: true })
-        }
-    } catch (e) {
-        return res.status(500).json({ error: "Could not toggle like" });
-    }
-})
-
-// Check if post is liked or not 
-blogRouter.get('/:id/liked', requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const postId = req.params.id;
-
-    try {
-        const liked = await prisma.like.findUnique({
-            where: {
-                userId_postId: {
-                    userId,
-                    postId
-                }
-            }
-        });
-
-        return res.json({ liked: !!liked });
-    } catch (e) {
-        // console.error("Error checking like:", e);
-        return res.status(500).json({ error: "Could not check like status" });
-    }
+// Cache only the response body. Per-request headers must stay live: CORS
+// (the site is served from two origins), Vary, and rate-limit counters.
+// Otherwise the first visitor's origin is replayed to everyone for a minute.
+apicache.options({
+    headerBlacklist: [
+        "access-control-allow-origin",
+        "access-control-allow-credentials",
+        "vary",
+        "ratelimit",
+        "ratelimit-policy",
+    ],
 });
 
-// Make ai post
-blogRouter.post('/ai-post', aiLimiter, requireAuth("user"), async (req: Request, res: Response) => {
-    const { title } = req.body;
+const cacheOkResponses = [
+    // apicache lets any client skip the cache with these headers; don't.
+    (req: Request, _res: Response, next: () => void) => {
+        delete req.headers["x-apicache-bypass"];
+        delete req.headers["x-apicache-force-fetch"];
+        next();
+    },
+    apicache.middleware("1 minute", (_req: Request, res: Response) => res.statusCode === 200),
+];
 
-    if (!title) {
-        return res.status(400).json({ error: "Title not found" })
+/** Drop cached feed pages so new, edited, or removed posts show up right away. */
+export function invalidateFeed() {
+    apicache.clear(undefined);
+}
+
+const publicAuthor = { select: { name: true, avatar: true, bio: true } } as const;
+
+const listSelect = {
+    id: true,
+    title: true,
+    content: true,
+    date: true,
+    status: true,
+    labels: true,
+    authorId: true,
+    author: publicAuthor,
+    _count: { select: { likes: true } },
+} satisfies Prisma.PostSelect;
+
+type Status = "draft" | "published";
+
+/** Sanitize post HTML, check it isn't empty, and moderate it if it's going public. */
+async function prepareContent(title: string, rawContent: string, status: Status): Promise<string> {
+    const content = sanitizePostHtml(rawContent);
+    // Check again after cleaning, which can make text longer ("&" -> "&amp;").
+    if (content.length > MAX_CONTENT_LENGTH) {
+        throw new HttpError(413, "Your post is too long. Try splitting it into two.");
+    }
+    const text = toPlainText(content);
+
+    if (!text && !/<img\s/i.test(content)) {
+        throw new HttpError(400, "Write something before saving.");
     }
 
-    const client = new OpenAI({
-        apiKey: OPENAI_API_KEY
+    if (status === "published" && (await isContentFlagged(title, text))) {
+        throw new HttpError(
+            422,
+            "This post seems to break our content guidelines, so it wasn't published. Please edit it and try again."
+        );
+    }
+    return content;
+}
+
+async function createPost(req: AuthRequest, res: Response, status: Status) {
+    const { title, content, labels } = parseInput(createPostSchema, req.body);
+    const cleanContent = await prepareContent(title, content, status);
+
+    const post = await prisma.post.create({
+        data: {
+            title,
+            content: cleanContent,
+            labels,
+            status,
+            authorId: req.userId!,
+            isAIGenerated: labels.includes("AI Generated"),
+        },
+        select: { id: true },
     });
 
-    const SYSTEM_PROMPT = `You are an expert blog writer.
-Write a well-structured, engaging, and informative blog article on the topic: "${title}".
-Return the article in valid HTML format, using headings (<h2>, <h3>), paragraphs (<p>), and lists (<ul>, <ol>) where appropriate.
-If the topic involves code or programming, include code blocks using <pre><code>...</code></pre> tags.
-If the topic is illegal, violent, or clearly unsafe, do not generate the article and return an error message instead. Otherwise, always generate the article.`;
+    if (status === "published") invalidateFeed();
+    res.status(201).json({ id: post.id, status });
+}
 
-    try {
-        const response = await client.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "system", content: SYSTEM_PROMPT }],
-            max_completion_tokens: 2000
-        });
+// Create a draft
+blogRouter.post("/draft", requireAuth("user"), writeLimiters, (req: AuthRequest, res: Response) =>
+    createPost(req, res, "draft")
+);
 
-        return res.json({
-            content: response.choices[0].message.content
-        })
-    } catch (error) {
-        // console.log("Error in generating content : ", error)
-        return res.status(400).json({ error: "Error generating content" })
+// Create and publish a post
+blogRouter.post("/publish", requireAuth("user"), writeLimiters, (req: AuthRequest, res: Response) =>
+    createPost(req, res, "published")
+);
+
+// Edit a published post
+blogRouter.put("/publish", requireAuth("user"), writeLimiters, async (req: AuthRequest, res: Response) => {
+    const { id, title, content, labels } = parseInput(updatePublishedSchema, req.body);
+
+    const existing = await prisma.post.findFirst({
+        where: { id, authorId: req.userId, status: "published" },
+        select: { id: true },
+    });
+    if (!existing) throw new HttpError(404, "Post not found.");
+
+    const cleanContent = await prepareContent(title, content, "published");
+    await prisma.post.update({
+        where: { id },
+        data: {
+            title,
+            content: cleanContent,
+            ...(labels ? { labels, isAIGenerated: labels.includes("AI Generated") } : {}),
+        },
+    });
+
+    invalidateFeed();
+    res.json({ id, status: "published" });
+});
+
+// Public feed: paginated, searchable, filterable
+blogRouter.get("/bulk", readLimiter, cacheOkResponses, async (req: Request, res: Response) => {
+    const { q, label, sort, page, limit } = parseInput(listPostsQuerySchema, req.query);
+
+    const where: Prisma.PostWhereInput = { status: "published" };
+    if (q) {
+        where.OR = [
+            { title: { contains: q, mode: "insensitive" } },
+            { content: { contains: q, mode: "insensitive" } },
+        ];
     }
-})
+    if (label) where.labels = { has: label };
 
+    const orderBy: Prisma.PostOrderByWithRelationInput[] =
+        sort === "popular" ? [{ likes: { _count: "desc" } }, { date: "desc" }] : [{ date: "desc" }];
 
-blogRouter.post('/ai-summary', async (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
+    const rows = await prisma.post.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit + 1,
+        select: listSelect,
+    });
 
-    const { content } = req.body;
-    if (!content) {
-        return res.status(400).json({ error: "Content not found" })
+    res.json({
+        posts: rows.slice(0, limit).map(withPreview),
+        page,
+        hasMore: rows.length > limit,
+    });
+});
+
+blogRouter.get("/drafts", requireAuth("user"), async (req: AuthRequest, res: Response) => {
+    const drafts = await prisma.post.findMany({
+        where: { status: "draft", authorId: req.userId },
+        orderBy: { date: "desc" },
+        take: MAX_LIST_POSTS,
+        select: listSelect,
+    });
+    res.json({ drafts: drafts.map(withPreview) });
+});
+
+// Update a draft, optionally publishing it
+blogRouter.patch("/:id", requireAuth("user"), writeLimiters, async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
+    const { title, content, labels, status } = parseInput(updateDraftSchema, req.body);
+
+    const draft = await prisma.post.findFirst({
+        where: { id, authorId: req.userId, status: "draft" },
+        select: { id: true },
+    });
+    if (!draft) throw new HttpError(404, "Draft not found.");
+
+    const cleanContent = await prepareContent(title, content, status);
+    await prisma.post.update({
+        where: { id },
+        data: {
+            title,
+            content: cleanContent,
+            labels,
+            status,
+            isAIGenerated: labels.includes("AI Generated"),
+            // A post's date is when it went public, not when the draft was started.
+            ...(status === "published" ? { date: new Date() } : {}),
+        },
+    });
+
+    if (status === "published") invalidateFeed();
+    res.json({ id, status });
+});
+
+// AI: write an article from a title
+blogRouter.post("/ai-post", requireAuth("user"), aiLimiter, async (req: AuthRequest, res: Response) => {
+    const { title } = parseInput(aiPostSchema, req.body);
+    const html = await generateArticle(title);
+    res.json({ content: sanitizePostHtml(tidyPunctuation(html)) });
+});
+
+// AI: streamed summary of a published post (by id, so this can't be used as an open AI proxy)
+const SUMMARY_INPUT_LIMIT = 12_000;
+const SUMMARY_CACHE_SIZE = 200;
+const SUMMARY_CACHE_TTL = 24 * 60 * 60 * 1000;
+const summaryCache = new Map<string, { text: string; at: number }>();
+
+function rememberSummary(key: string, text: string) {
+    summaryCache.delete(key);
+    summaryCache.set(key, { text, at: Date.now() });
+    if (summaryCache.size > SUMMARY_CACHE_SIZE) {
+        const oldest = summaryCache.keys().next().value;
+        if (oldest) summaryCache.delete(oldest);
+    }
+}
+
+blogRouter.post("/ai-summary", optionalAuth, summaryLimiter, async (req: AuthRequest, res: Response) => {
+    const { postId } = parseInput(aiSummarySchema, req.body);
+
+    const post = await prisma.post.findFirst({
+        where: { id: postId, status: "published" },
+        select: { id: true, content: true },
+    });
+    if (!post) throw new HttpError(404, "Post not found.");
+
+    const text = toPlainText(post.content);
+    if (text.length < 300) {
+        throw new HttpError(400, "This post is short enough to read in under a minute.");
     }
 
-    const client = new OpenAI({ apiKey: OPENAI_API_KEY });
+    const cacheKey = `${post.id}:${createHash("sha1").update(post.content).digest("hex")}`;
+    const cached = summaryCache.get(cacheKey);
+    const fresh = cached && Date.now() - cached.at < SUMMARY_CACHE_TTL ? cached.text : null;
 
-    const SUMMARY_PROMPT = `You are an expert blog summarizer.
-Summarize the following article content in 5-7 sentences, focusing only on the most important points.
-Return the summary in plain text.
+    if (!fresh && !aiEnabled) {
+        throw new AIError(503, "AI summaries aren't set up on this server yet.");
+    }
 
-Article content:
-${content}
-`;
+    // If the reader leaves early we keep generating (bounded by max_tokens) so
+    // the summary is cached. Aborting would let someone disconnect after the
+    // first words and have every request billed again.
+    let readerLeft = false;
+    res.on("close", () => {
+        readerLeft = true;
+    });
 
-    try {
-        const response = await client.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            stream: true,
-            messages: [{ role: "system", content: SUMMARY_PROMPT }]
-        });
+    // Pull the first chunk before sending headers, so setup errors (rate limit,
+    // provider down) still return a normal JSON error with the right status.
+    const stream = fresh ? null : streamSummary(text.slice(0, SUMMARY_INPUT_LIMIT), new AbortController().signal);
+    const first = stream ? await stream.next() : null;
 
-        for await (const chunk of response) {
-            const text = chunk.choices[0]?.delta?.content || "";
-            if (text) {
-                res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+    res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+    });
+    const send = (data: unknown) => {
+        if (!readerLeft) res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    if (fresh) {
+        send({ content: fresh });
+    } else if (stream && first) {
+        let full = "";
+        try {
+            if (!first.done) {
+                full += first.value;
+                send({ content: first.value });
             }
+            for await (const chunk of stream) {
+                full += chunk;
+                send({ content: chunk });
+            }
+            if (full.trim()) rememberSummary(cacheKey, tidyPunctuation(full.trim()));
+        } catch (error) {
+            console.error("[ai] summary stream failed:", error);
+            send({ error: "The summary was interrupted. Please try again." });
         }
+    }
 
+    if (!readerLeft) {
         res.write("data: [DONE]\n\n");
         res.end();
-    } catch (error) {
-        // console.error("Error in summarising content:", error);
-        res.status(500).json({ error: "Error summarising content" });
     }
 });
 
-blogRouter.post("/report/:id", requireAuth("user"), async (req: AuthRequest, res: Response) => {
-    const postId = req.params.id
+blogRouter.post("/report/:id", requireAuth("user"), reportLimiter, async (req: AuthRequest, res: Response) => {
+    const id = req.params.id;
 
-    try {
-        const post = await prisma.post.findUnique({
-            where: {
-                id: postId
+    const post = await prisma.post.findFirst({
+        where: { id, status: "published" },
+        select: { authorId: true },
+    });
+    if (!post) throw new HttpError(404, "Post not found.");
+    if (post.authorId === req.userId) throw new HttpError(400, "You can't report your own post.");
+
+    await prisma.post.update({
+        where: { id },
+        data: { isReported: true, numberOfReports: { increment: 1 } },
+    });
+
+    res.json({ reported: true });
+});
+
+// Single post. Drafts are visible only to their author.
+blogRouter.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
+    const visibility: Prisma.PostWhereInput[] = [{ status: "published" }];
+    if (req.userId) visibility.push({ status: "draft", authorId: req.userId });
+
+    const post = await prisma.post.findFirst({
+        where: { id: req.params.id, OR: visibility },
+        select: { ...listSelect, isAIGenerated: true },
+    });
+    if (!post) throw new HttpError(404, "This post doesn't exist or has been removed.");
+
+    // Older posts were saved before server-side sanitizing existed.
+    const content = sanitizePostHtml(post.content);
+    res.json({
+        post: { ...post, content, readingMinutes: readingMinutes(toPlainText(content)) },
+    });
+});
+
+blogRouter.delete("/:id", requireAuth("user"), writeLimiters, async (req: AuthRequest, res: Response) => {
+    const post = await prisma.post.findFirst({
+        where: { id: req.params.id, authorId: req.userId, status: { in: ["draft", "published"] } },
+        select: { id: true, status: true },
+    });
+    if (!post) throw new HttpError(404, "Post not found.");
+
+    await prisma.post.update({ where: { id: post.id }, data: { status: "deleted" } });
+
+    // Drafts never appear in the feed, so only clear the cache for public posts.
+    if (post.status === "published") invalidateFeed();
+    res.json({ success: true });
+});
+
+// Like or unlike a post
+blogRouter.post("/:id/like", requireAuth("user"), async (req: AuthRequest, res: Response) => {
+    const userId = req.userId!;
+    const postId = req.params.id;
+
+    const post = await prisma.post.findFirst({
+        where: { id: postId, status: "published" },
+        select: { id: true },
+    });
+    if (!post) throw new HttpError(404, "Post not found.");
+
+    const removed = await prisma.like.deleteMany({ where: { userId, postId } });
+    let liked = false;
+    if (removed.count === 0) {
+        try {
+            await prisma.like.create({ data: { userId, postId } });
+        } catch (error) {
+            // A double click can race; the like exists either way.
+            if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) {
+                throw error;
             }
-        })
-
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" })
         }
-
-        await prisma.post.update({
-            where: {
-                id: postId
-            },
-            data: {
-                isReported: true,
-                numberOfReports: post.numberOfReports + 1
-            }
-        })
-
-        return res.status(200).json({ reported: true })
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: "Error reporting post" })
+        liked = true;
     }
-})
+
+    const likes = await prisma.like.count({ where: { postId } });
+    res.json({ liked, likes });
+});
+
+blogRouter.get("/:id/liked", requireAuth("user"), async (req: AuthRequest, res: Response) => {
+    const like = await prisma.like.findUnique({
+        where: { userId_postId: { userId: req.userId!, postId: req.params.id } },
+        select: { id: true },
+    });
+    res.json({ liked: Boolean(like) });
+});

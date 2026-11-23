@@ -1,46 +1,65 @@
-import express from "express";
-import { Response } from "express";
-import { PrismaClient } from '@prisma/client'
+import { Router, Response } from "express";
+import { prisma } from "../lib/prisma";
+import { HttpError } from "../lib/errors";
+import { withPreview } from "../lib/html";
 import { AuthRequest, requireAuth } from "../middleware";
+import { invalidateFeed } from "./blog";
 
-export const adminRouter = express.Router();
+export const adminRouter = Router();
 
-const prisma = new PrismaClient();
+adminRouter.use(requireAuth("admin"));
 
-adminRouter.get('/all-details', requireAuth("admin"), async (req: AuthRequest, res: Response) => {
-    const userId = req.userId;
-    if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
+adminRouter.get("/all-details", async (_req: AuthRequest, res: Response) => {
+    const [totalUsers, totalBlogs, reportedBlogs] = await Promise.all([
+        prisma.user.count(),
+        prisma.post.count({ where: { status: "published" } }),
+        prisma.post.count({ where: { status: "published", isReported: true } }),
+    ]);
 
-    const totalUsers = await prisma.user.count()
-    const totalBlogs = await prisma.post.count()
+    res.json({ totalUsers, totalBlogs, reportedBlogs });
+});
 
-    return res.json({
-        totalUsers, totalBlogs
-    })
-})
+adminRouter.get("/reported", async (_req: AuthRequest, res: Response) => {
+    const posts = await prisma.post.findMany({
+        where: { status: "published", isReported: true },
+        orderBy: [{ numberOfReports: "desc" }, { date: "desc" }],
+        take: 100,
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            date: true,
+            labels: true,
+            status: true,
+            authorId: true,
+            numberOfReports: true,
+            author: { select: { name: true, avatar: true, bio: true } },
+            _count: { select: { likes: true } },
+        },
+    });
 
-adminRouter.delete('/:id', requireAuth("admin"), async (req: AuthRequest, res: Response) => {
-    const id = req.params.id;
+    res.json({ posts: posts.map(withPreview) });
+});
 
-    try {
-        const blog = await prisma.post.findUnique({
-            where: { id }
-        })
+// Keep the post up and clear its reports
+adminRouter.post("/:id/dismiss", async (req: AuthRequest, res: Response) => {
+    const result = await prisma.post.updateMany({
+        where: { id: req.params.id },
+        data: { isReported: false, numberOfReports: 0 },
+    });
+    if (result.count === 0) throw new HttpError(404, "Post not found.");
 
-        if (!blog) {
-            return res.status(400).json({ error: "Post not found" })
-        }
+    res.json({ success: true });
+});
 
-        await prisma.post.update({
-            where: { id },
-            data: { status: "removed" }
-        })
+// Take a post down
+adminRouter.delete("/:id", async (req: AuthRequest, res: Response) => {
+    const result = await prisma.post.updateMany({
+        where: { id: req.params.id, status: "published" },
+        data: { status: "removed" },
+    });
+    if (result.count === 0) throw new HttpError(404, "Post not found.");
 
-        return res.json({ success: true })
-    } catch (error) {
-        return res.status(400).json({ error: 'Error in deleting post' })
-    }
-})
-
+    invalidateFeed();
+    res.json({ success: true });
+});
