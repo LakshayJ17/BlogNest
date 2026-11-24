@@ -22,8 +22,14 @@ function readUserId(req: Request): string | null {
     if (!header?.startsWith("Bearer ")) return null;
 
     try {
-        const payload = jwt.verify(header.slice(7), env.jwtSecret, { algorithms: ["HS256"] });
-        if (typeof payload === "object" && typeof payload.id === "string") {
+        const payload = jwt.verify(header.slice(7), env.jwtSecret, {
+            algorithms: ["HS256"],
+            // Also cap age by issue time, in case a token carries a far-off expiry.
+            maxAge: env.jwtExpiresIn,
+        });
+        // Tokens from the old backend had no expiry and would work forever, so
+        // only accept tokens that have one. Their holders just sign in again.
+        if (typeof payload === "object" && typeof payload.id === "string" && typeof payload.exp === "number") {
             return payload.id;
         }
     } catch {
