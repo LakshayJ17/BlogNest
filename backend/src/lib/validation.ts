@@ -105,3 +105,7 @@ export const listPostsQuerySchema = z.object({
     page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(500).default(1)),
     limit: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(50).default(12)),
 });
+
+export const adminUsersQuerySchema = z.object({
+    filter: z.preprocess(emptyToUndefined, z.enum(["newest", "suspended"], { message: "Unknown filter" }).default("newest")),
+});

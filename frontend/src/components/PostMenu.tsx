@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DotsThree, Flag, LinkSimple, PencilSimpleLine, Trash } from "@phosphor-icons/react";
+import { DotsThree, Flag, LinkSimple, PencilSimpleLine, Prohibit, Trash } from "@phosphor-icons/react";
 import { toast } from "react-toastify";
 import { api, getErrorMessage } from "../lib/api";
 import { SITE_URL } from "../config";
@@ -11,10 +11,11 @@ interface PostMenuProps {
   postId: string;
   authorId?: string;
   isDraft?: boolean;
+  /** Called when the story leaves public view: deleted, removed, or its author suspended. */
   onDeleted?: (id: string) => void;
 }
 
-type Pending = "delete" | "report" | null;
+type Pending = "delete" | "report" | "suspend" | null;
 
 export function PostMenu({ postId, authorId, isDraft = false, onDeleted }: PostMenuProps) {
   const user = useAuthStore((s) => s.user);
@@ -26,6 +27,7 @@ export function PostMenu({ postId, authorId, isDraft = false, onDeleted }: PostM
   const isOwner = Boolean(user && authorId && user.id === authorId);
   const canDelete = isOwner || (isAdmin && !isDraft);
   const canReport = !isOwner && !isAdmin && !isDraft;
+  const canSuspend = isAdmin && !isOwner && !isDraft && Boolean(authorId);
 
   const copyLink = async () => {
     try {
@@ -55,6 +57,10 @@ export function PostMenu({ postId, authorId, isDraft = false, onDeleted }: PostM
       } else if (confirm === "report") {
         await api.post(`/blog/report/${postId}`);
         toast.success("Thanks. Our team will review this story.");
+      } else if (confirm === "suspend") {
+        await api.post(`/admin/users/${authorId}/suspend`);
+        toast.success("Author suspended. Their stories are hidden.");
+        onDeleted?.(postId);
       }
       setConfirm(null);
     } catch (error) {
@@ -75,6 +81,7 @@ export function PostMenu({ postId, authorId, isDraft = false, onDeleted }: PostM
           { label: "Edit story", icon: PencilSimpleLine, to: `/publish/${postId}`, hidden: !isOwner || isDraft },
           { label: "Copy link", icon: LinkSimple, onSelect: copyLink, hidden: isDraft },
           { label: "Report story", icon: Flag, onSelect: askToReport, hidden: !canReport },
+          { label: "Suspend author", icon: Prohibit, tone: "danger", onSelect: () => setConfirm("suspend"), hidden: !canSuspend },
           {
             label: isAdmin ? "Remove story" : isDraft ? "Delete draft" : "Delete story",
             icon: Trash,
@@ -97,6 +104,17 @@ export function PostMenu({ postId, authorId, isDraft = false, onDeleted }: PostM
                 : "This can't be undone. The story will disappear from BlogNest."
           }
           confirmLabel={isAdmin ? "Remove" : "Delete"}
+          busy={busy}
+          onConfirm={runConfirmed}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+      {confirm === "suspend" && (
+        <ConfirmDialog
+          open
+          title="Suspend this author?"
+          description="They'll be signed out and can't sign in again, and every story they've published will be hidden. You can lift the suspension from the dashboard."
+          confirmLabel="Suspend"
           busy={busy}
           onConfirm={runConfirmed}
           onCancel={() => setConfirm(null)}

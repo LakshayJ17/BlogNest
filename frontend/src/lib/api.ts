@@ -16,10 +16,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-let unauthorizedHandler: (() => void) | null = null;
+export type SignOutReason = "expired" | "suspended";
 
-/** Called when the API rejects the stored token (expired or revoked). */
-export function onUnauthorized(handler: () => void) {
+let unauthorizedHandler: ((reason: SignOutReason) => void) | null = null;
+
+/** Called when the API rejects the stored token (expired, revoked, or the account was suspended). */
+export function onUnauthorized(handler: (reason: SignOutReason) => void) {
   unauthorizedHandler = handler;
 }
 
@@ -27,7 +29,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401 && readToken()) {
-      unauthorizedHandler?.();
+      unauthorizedHandler?.(error.response.data?.code === "account_suspended" ? "suspended" : "expired");
     }
     return Promise.reject(error);
   }

@@ -68,9 +68,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-onUnauthorized(() => {
+onUnauthorized((reason) => {
   const { token, logout } = useAuthStore.getState();
   if (!token) return;
   logout();
-  toast.info("Your session has expired. Please sign in again.", { toastId: "session-expired" });
+  if (reason === "suspended") {
+    toast.error("This account has been suspended.", { toastId: "account-suspended" });
+  } else {
+    toast.info("Your session has expired. Please sign in again.", { toastId: "session-expired" });
+  }
 });

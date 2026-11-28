@@ -7,7 +7,7 @@ import { HttpError, parseInput } from "../lib/errors";
 import { verifyCaptcha } from "../lib/captcha";
 import { googleAuthSchema, MAX_LIST_POSTS, signinSchema, signupSchema } from "../lib/validation";
 import { withPreview } from "../lib/html";
-import { AuthRequest, requireAuth, signToken } from "../middleware";
+import { AuthRequest, requireAuth, signToken, SUSPENDED_MESSAGE } from "../middleware";
 import { loginLimiter, signupLimiter } from "../rate-limiters";
 
 export const userRouter = Router();
@@ -65,6 +65,8 @@ userRouter.post("/signin", loginLimiter, async (req: Request, res: Response) => 
     if (!user || !user.hashedPassword || !passwordMatches) {
         throw new HttpError(401, "Incorrect email or password.");
     }
+    // Only after the password matched, so this can't be used to probe emails.
+    if (user.suspendedAt) throw new HttpError(403, SUSPENDED_MESSAGE);
 
     res.json({ jwt: signToken(user.id), role: user.role });
 });
@@ -127,6 +129,7 @@ userRouter.post("/google-auth", loginLimiter, async (req: Request, res: Response
             });
         }
     }
+    if (user.suspendedAt) throw new HttpError(403, SUSPENDED_MESSAGE);
 
     res.json({ jwt: signToken(user.id), role: user.role });
 });

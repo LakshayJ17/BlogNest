@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-toastify";
-import { Flag, ShieldCheck } from "@phosphor-icons/react";
+import { Flag, ShieldCheck, UsersThree } from "@phosphor-icons/react";
 import { api, getErrorMessage } from "../lib/api";
 import type { PostPreview } from "../lib/types";
 import { PageShell } from "../components/PageShell";
@@ -11,6 +11,7 @@ import { PostedDate } from "../components/PostedDate";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { EmptyState, ErrorState } from "../components/EmptyState";
 import { buttonClasses } from "../components/ui/button";
+import { cn } from "../lib/utils";
 
 interface Stats {
   totalUsers: number;
@@ -20,12 +21,35 @@ interface Stats {
 
 interface AdminAction {
   id: string;
-  action: "dismiss_reports" | "remove_post";
+  action: "dismiss_reports" | "remove_post" | "suspend_user" | "unsuspend_user";
   postId: string | null;
-  details: { title?: string; reportsAtAction?: number } | null;
+  targetUserId: string | null;
+  details: { title?: string; reportsAtAction?: number; name?: string } | null;
   createdAt: string;
   admin: { name: string };
 }
+
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  joinedAt: string;
+  role: "user" | "admin";
+  suspendedAt: string | null;
+  _count: { posts: number };
+}
+
+type MemberFilter = "newest" | "suspended";
+
+/** Who the suspend dialog is about. Stories is unknown when suspending from the review queue. */
+interface SuspendTarget {
+  id: string;
+  name: string;
+  stories?: number;
+}
+
+const ghostDanger = "text-tag-red hover:bg-tag-red-bg hover:text-tag-red";
 
 export const AdminDashboard = () => {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -35,28 +59,59 @@ export const AdminDashboard = () => {
   const [error, setError] = useState("");
   const [removing, setRemoving] = useState<PostPreview | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [memberFilter, setMemberFilter] = useState<MemberFilter>("newest");
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersStatus, setMembersStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [suspending, setSuspending] = useState<SuspendTarget | null>(null);
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
   const loadActions = useCallback(async () => {
     const { data } = await api.get<{ actions: AdminAction[] }>("/admin/actions");
     setActions(data.actions);
   }, []);
 
+  const fetchOverview = useCallback(async () => {
+    const [details, queue] = await Promise.all([
+      api.get<Stats>("/admin/all-details"),
+      api.get<{ posts: PostPreview[] }>("/admin/reported"),
+      loadActions(),
+    ]);
+    setStats(details.data);
+    setReported(queue.data.posts);
+  }, [loadActions]);
+
   const load = useCallback(async () => {
     setStatus("loading");
     try {
-      const [details, queue] = await Promise.all([
-        api.get<Stats>("/admin/all-details"),
-        api.get<{ posts: PostPreview[] }>("/admin/reported"),
-        loadActions(),
-      ]);
-      setStats(details.data);
-      setReported(queue.data.posts);
+      await fetchOverview();
       setStatus("ready");
     } catch (err) {
       setError(getErrorMessage(err, "Couldn't load the dashboard."));
       setStatus("error");
     }
-  }, [loadActions]);
+  }, [fetchOverview]);
+
+  const loadMembers = useCallback(async (filter: MemberFilter, quiet = false) => {
+    if (!quiet) setMembersStatus("loading");
+    try {
+      const { data } = await api.get<{ users: Member[] }>("/admin/users", { params: { filter } });
+      setMembers(data.users);
+      setMembersStatus("ready");
+    } catch {
+      if (!quiet) setMembersStatus("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadMembers(memberFilter);
+  }, [loadMembers, memberFilter]);
+
+  // A suspension hides or restores stories everywhere, so refresh every list
+  // in the background. The action itself already worked.
+  const refreshAfterAccountChange = () => {
+    fetchOverview().catch(() => undefined);
+    void loadMembers(memberFilter, true);
+  };
 
   // After an action, show its new log entry. The action itself already worked,
   // so a failure here only leaves the log a step behind until the next load.
@@ -88,6 +143,36 @@ export const AdminDashboard = () => {
       toast.error(getErrorMessage(err));
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const suspend = async () => {
+    if (!suspending) return;
+    setBusyUserId(suspending.id);
+    try {
+      await api.post(`/admin/users/${suspending.id}/suspend`);
+      // Their stories are hidden now, so they leave the review queue at once.
+      setReported((current) => current.filter((p) => p.authorId !== suspending.id));
+      refreshAfterAccountChange();
+      toast.success(`${suspending.name} is suspended. Their stories are hidden.`);
+      setSuspending(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setBusyUserId(null);
+    }
+  };
+
+  const liftSuspension = async (member: Member) => {
+    setBusyUserId(member.id);
+    try {
+      await api.post(`/admin/users/${member.id}/unsuspend`);
+      refreshAfterAccountChange();
+      toast.success(`${member.name} can sign in again. Their stories are back.`);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setBusyUserId(null);
     }
   };
 
@@ -203,7 +288,124 @@ export const AdminDashboard = () => {
                       >
                         Remove story
                       </button>
+                      {post.authorId && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSuspending({ id: post.authorId!, name: post.author?.name ?? "This author" })
+                          }
+                          disabled={busyId === post.id || busyUserId === post.authorId}
+                          className={buttonClasses({ variant: "ghost", size: "sm", className: ghostDanger })}
+                        >
+                          Suspend author
+                        </button>
+                      )}
                     </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="mt-14" aria-labelledby="members-heading" aria-busy={membersStatus === "loading"}>
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+              <h2 id="members-heading" className="font-serif text-2xl font-medium tracking-[-0.01em] text-ink">
+                Members
+              </h2>
+              <div role="group" aria-label="Show members" className="flex gap-1">
+                {(["newest", "suspended"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    aria-pressed={memberFilter === filter}
+                    onClick={() => setMemberFilter(filter)}
+                    className={cn(
+                      "focus-ring cursor-pointer rounded-md px-3 py-1.5 font-mono text-xs transition-colors",
+                      memberFilter === filter ? "bg-accent-soft text-accent-strong" : "text-muted hover:bg-bone hover:text-ink"
+                    )}
+                  >
+                    {filter === "newest" ? "Newest" : "Suspended"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {membersStatus === "loading" && (
+              <div className="divide-y divide-line" aria-hidden="true">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex animate-pulse items-center gap-3 py-5">
+                    <div className="h-8 w-8 rounded-full bg-line" />
+                    <div className="h-3 w-48 rounded-full bg-line" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {membersStatus === "error" && (
+              <div className="mt-6">
+                <ErrorState message="Couldn't load members." onRetry={() => loadMembers(memberFilter)} />
+              </div>
+            )}
+
+            {membersStatus === "ready" && members.length === 0 && (
+              <EmptyState
+                className="border-t-0"
+                icon={UsersThree}
+                title={memberFilter === "suspended" ? "No suspended accounts" : "No members yet"}
+                description={
+                  memberFilter === "suspended"
+                    ? "Accounts you suspend show up here, so you can lift the suspension later."
+                    : "New accounts show up here as people sign up."
+                }
+              />
+            )}
+
+            {membersStatus === "ready" && members.length > 0 && (
+              <ul className="divide-y divide-line border-b border-line">
+                {members.map((member) => (
+                  <li key={member.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar name={member.name} src={member.avatar} size="sm" />
+                      <div className="min-w-0">
+                        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] font-medium text-ink">
+                          <span className="truncate">{member.name}</span>
+                          {member.role === "admin" && <MemberTag tone="green">Admin</MemberTag>}
+                          {member.suspendedAt && <MemberTag tone="red">Suspended</MemberTag>}
+                        </p>
+                        {/* Wraps to two lines on narrow screens instead of cutting off the details. */}
+                        <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 font-mono text-xs text-muted">
+                          <span className="max-w-full truncate">{member.email}</span>
+                          <span aria-hidden="true" className="hidden text-faint sm:inline">/</span>
+                          <span>
+                            {member.suspendedAt
+                              ? `suspended ${formatDay(member.suspendedAt)}`
+                              : `joined ${formatDay(member.joinedAt)}`}
+                            <span aria-hidden="true" className="px-1.5 text-faint">/</span>
+                            {member._count.posts} {member._count.posts === 1 ? "story" : "stories"}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    {member.role !== "admin" &&
+                      (member.suspendedAt ? (
+                        <button
+                          type="button"
+                          onClick={() => liftSuspension(member)}
+                          disabled={busyUserId === member.id}
+                          className={buttonClasses({ variant: "secondary", size: "sm" })}
+                        >
+                          Lift suspension
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setSuspending({ id: member.id, name: member.name, stories: member._count.posts })}
+                          disabled={busyUserId === member.id}
+                          className={buttonClasses({ variant: "ghost", size: "sm", className: ghostDanger })}
+                        >
+                          Suspend
+                        </button>
+                      ))}
                   </li>
                 ))}
               </ul>
@@ -226,9 +428,12 @@ export const AdminDashboard = () => {
                   {actions.map((entry) => (
                     <li key={entry.id} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4">
                       <p className="min-w-0 text-[15px] text-ink">
-                        <span className="font-medium">{entry.admin.name}</span>{" "}
-                        {describeAction(entry)}{" "}
-                        <span className="font-serif italic">{entry.details?.title ?? "a story"}</span>
+                        <span className="font-medium">{entry.admin.name}</span> {describeAction(entry)}{" "}
+                        {isAccountAction(entry) ? (
+                          <span className="font-medium">{entry.details?.name ?? "an account"}</span>
+                        ) : (
+                          <span className="font-serif italic">{entry.details?.title ?? "a story"}</span>
+                        )}
                       </p>
                       <time dateTime={entry.createdAt} className="font-mono text-xs text-muted tabular-nums">
                         {formatLogTime(entry.createdAt)}
@@ -253,6 +458,18 @@ export const AdminDashboard = () => {
           onCancel={() => setRemoving(null)}
         />
       )}
+
+      {suspending && (
+        <ConfirmDialog
+          open
+          title={`Suspend ${suspending.name}?`}
+          description={suspendDescription(suspending)}
+          confirmLabel="Suspend"
+          busy={busyUserId === suspending.id}
+          onConfirm={suspend}
+          onCancel={() => setSuspending(null)}
+        />
+      )}
     </PageShell>
   );
 };
@@ -267,10 +484,43 @@ function formatLogTime(iso: string): string {
   });
 }
 
+function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function suspendDescription({ stories }: SuspendTarget): string {
+  const hidden =
+    stories === undefined
+      ? "Every story they've published will be hidden until you lift the suspension."
+      : stories === 0
+        ? "They haven't published any stories. You can lift the suspension at any time."
+        : `Their ${stories} published ${stories === 1 ? "story" : "stories"} will be hidden until you lift the suspension.`;
+  return `They'll be signed out and can't sign in again. ${hidden}`;
+}
+
+function isAccountAction(entry: AdminAction): boolean {
+  return entry.action === "suspend_user" || entry.action === "unsuspend_user";
+}
+
 function describeAction(entry: AdminAction): string {
+  if (entry.action === "suspend_user") return "suspended";
+  if (entry.action === "unsuspend_user") return "lifted the suspension on";
   if (entry.action === "remove_post") return "removed";
   const count = entry.details?.reportsAtAction ?? 0;
   return `cleared ${count} ${count === 1 ? "report" : "reports"} on`;
+}
+
+function MemberTag({ tone, children }: { tone: "red" | "green"; children: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 font-mono text-[10px] font-medium tracking-[0.08em] uppercase",
+        tone === "red" ? "bg-tag-red-bg text-tag-red" : "bg-tag-green-bg text-tag-green"
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 function StatCard({ label, value, alert }: { label: string; value?: number; alert?: boolean }) {

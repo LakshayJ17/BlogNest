@@ -9,6 +9,8 @@ export interface AuthRequest extends Request {
     userRole?: Role;
 }
 
+export const SUSPENDED_MESSAGE = "This account has been suspended.";
+
 export function signToken(userId: string): string {
     return jwt.sign({ id: userId }, env.jwtSecret, {
         algorithm: "HS256",
@@ -51,11 +53,15 @@ export function requireAuth(role?: Role) {
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { role: true },
+            select: { role: true, suspendedAt: true },
         });
 
         if (!user) {
             return res.status(401).json({ error: "Your session has expired. Please sign in again." });
+        }
+        if (user.suspendedAt) {
+            // A 401 signs the browser out, so a suspended account loses any open session too.
+            return res.status(401).json({ error: SUSPENDED_MESSAGE, code: "account_suspended" });
         }
         if (role && user.role !== role) {
             if (role === "admin") {

@@ -23,6 +23,8 @@ enum Role {
 enum AdminActionType {
   dismiss_reports
   remove_post
+  suspend_user
+  unsuspend_user
 }
 
 model User {
@@ -37,8 +39,11 @@ model User {
   posts          Post[]
   joinedAt       DateTime      @default(now())
   role           Role          @default(user)
+  /// Set while an admin has suspended the account: no sign-in, stories hidden.
+  suspendedAt    DateTime?
   reports        Report[]
-  adminActions   AdminAction[]
+  adminActions   AdminAction[] @relation("AdminActionAdmin")
+  actionsAgainst AdminAction[] @relation("AdminActionTarget")
 }
 
 model Post {
@@ -87,15 +92,18 @@ model Report {
 
 /// Audit trail of moderation actions. The app only ever adds rows.
 model AdminAction {
-  id        String          @id @default(cuid())
-  adminId   String
-  action    AdminActionType
-  postId    String?
-  /// The post as it was when the action happened (title, author, report count).
-  details   Json?
-  createdAt DateTime        @default(now())
-  admin     User            @relation(fields: [adminId], references: [id])
-  post      Post?           @relation(fields: [postId], references: [id])
+  id           String          @id @default(cuid())
+  adminId      String
+  action       AdminActionType
+  postId       String?
+  /// The account a suspend or unsuspend action was about.
+  targetUserId String?
+  /// The post or account as it was when the action happened (title, name, counts).
+  details      Json?
+  createdAt    DateTime        @default(now())
+  admin        User            @relation("AdminActionAdmin", fields: [adminId], references: [id])
+  post         Post?           @relation(fields: [postId], references: [id])
+  targetUser   User?           @relation("AdminActionTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
 }

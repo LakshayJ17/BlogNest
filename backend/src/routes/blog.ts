@@ -51,6 +51,9 @@ export function invalidateFeed() {
 
 const publicAuthor = { select: { name: true, avatar: true, bio: true } } as const;
 
+/** Posts anyone can see: published, by an account that isn't suspended. */
+export const publicPost: Prisma.PostWhereInput = { status: "published", author: { suspendedAt: null } };
+
 const listSelect = {
     id: true,
     title: true,
@@ -145,7 +148,7 @@ blogRouter.put("/publish", requireAuth("user"), writeLimiters, async (req: AuthR
 blogRouter.get("/bulk", readLimiter, cacheOkResponses, async (req: Request, res: Response) => {
     const { q, label, sort, page, limit } = parseInput(listPostsQuerySchema, req.query);
 
-    const where: Prisma.PostWhereInput = { status: "published" };
+    const where: Prisma.PostWhereInput = { ...publicPost };
     if (q) {
         where.OR = [
             { title: { contains: q, mode: "insensitive" } },
@@ -237,7 +240,7 @@ blogRouter.post("/ai-summary", optionalAuth, summaryLimiter, async (req: AuthReq
     const { postId } = parseInput(aiSummarySchema, req.body);
 
     const post = await prisma.post.findFirst({
-        where: { id: postId, status: "published" },
+        where: { id: postId, ...publicPost },
         select: { id: true, content: true },
     });
     if (!post) throw new HttpError(404, "Post not found.");
@@ -307,7 +310,7 @@ blogRouter.post("/report/:id", requireAuth("user"), reportLimiter, async (req: A
     const id = req.params.id;
 
     const post = await prisma.post.findFirst({
-        where: { id, status: "published" },
+        where: { id, ...publicPost },
         select: { authorId: true },
     });
     if (!post) throw new HttpError(404, "Post not found.");
@@ -335,7 +338,7 @@ blogRouter.post("/report/:id", requireAuth("user"), reportLimiter, async (req: A
 
 // Single post. Drafts are visible only to their author.
 blogRouter.get("/:id", optionalAuth, async (req: AuthRequest, res: Response) => {
-    const visibility: Prisma.PostWhereInput[] = [{ status: "published" }];
+    const visibility: Prisma.PostWhereInput[] = [publicPost];
     if (req.userId) visibility.push({ status: "draft", authorId: req.userId });
 
     const post = await prisma.post.findFirst({
@@ -371,7 +374,7 @@ blogRouter.post("/:id/like", requireAuth("user"), async (req: AuthRequest, res: 
     const postId = req.params.id;
 
     const post = await prisma.post.findFirst({
-        where: { id: postId, status: "published" },
+        where: { id: postId, ...publicPost },
         select: { id: true },
     });
     if (!post) throw new HttpError(404, "Post not found.");
