@@ -313,10 +313,22 @@ blogRouter.post("/report/:id", requireAuth("user"), reportLimiter, async (req: A
     if (!post) throw new HttpError(404, "Post not found.");
     if (post.authorId === req.userId) throw new HttpError(400, "You can't report your own post.");
 
-    await prisma.post.update({
-        where: { id },
-        data: { isReported: true, numberOfReports: { increment: 1 } },
-    });
+    // Count each reader once per post. The unique (userId, postId) row makes a
+    // repeat report fail and roll back, so the count can't be inflated.
+    try {
+        await prisma.$transaction([
+            prisma.report.create({ data: { userId: req.userId!, postId: id } }),
+            prisma.post.update({
+                where: { id },
+                data: { isReported: true, numberOfReports: { increment: 1 } },
+            }),
+        ]);
+    } catch (error) {
+        if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) {
+            throw error;
+        }
+        // Already reported by this reader: nothing more to do.
+    }
 
     res.json({ reported: true });
 });

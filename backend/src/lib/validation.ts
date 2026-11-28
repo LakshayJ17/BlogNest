@@ -35,10 +35,14 @@ const newPassword = requiredString("Password")
     .regex(/\d/, "Password needs a number")
     .regex(/[^A-Za-z0-9]/, "Password needs a special character");
 
+// Cloudflare Turnstile token from the signup and sign-in forms (at most 2048 characters).
+const captchaToken = z.string().max(2048, "Invalid security check").optional();
+
 export const signupSchema = z.object({
     name: z.string().trim().max(60, "Name must be at most 60 characters").optional(),
     email,
     password: newPassword,
+    captchaToken,
 });
 
 // Sign-in must not apply the new-password rules, or older accounts with
@@ -46,6 +50,7 @@ export const signupSchema = z.object({
 export const signinSchema = z.object({
     email,
     password: requiredString("Password").min(1, "Password is required").max(128, "Incorrect email or password"),
+    captchaToken,
 });
 
 export const googleAuthSchema = z.object({

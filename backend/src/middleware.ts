@@ -58,6 +58,10 @@ export function requireAuth(role?: Role) {
             return res.status(401).json({ error: "Your session has expired. Please sign in again." });
         }
         if (role && user.role !== role) {
+            if (role === "admin") {
+                // Someone signed in tried an admin route. Worth seeing in the logs.
+                console.warn(`[security] user ${userId} was refused ${req.method} ${req.originalUrl} (admin only)`);
+            }
             return res.status(403).json({ error: "You don't have permission to do that." });
         }
 

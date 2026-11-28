@@ -4,6 +4,7 @@ import { OAuth2Client, TokenPayload } from "google-auth-library";
 import { env } from "../env";
 import { prisma } from "../lib/prisma";
 import { HttpError, parseInput } from "../lib/errors";
+import { verifyCaptcha } from "../lib/captcha";
 import { googleAuthSchema, MAX_LIST_POSTS, signinSchema, signupSchema } from "../lib/validation";
 import { withPreview } from "../lib/html";
 import { AuthRequest, requireAuth, signToken } from "../middleware";
@@ -36,7 +37,8 @@ async function findUserByEmail(email: string) {
 }
 
 userRouter.post("/signup", signupLimiter, async (req: Request, res: Response) => {
-    const { name, email, password } = parseInput(signupSchema, req.body);
+    const { name, email, password, captchaToken } = parseInput(signupSchema, req.body);
+    await verifyCaptcha(captchaToken, req.ip, "signup");
 
     if (await findUserByEmail(email)) {
         throw new HttpError(409, "An account with this email already exists. Try signing in.");
@@ -51,7 +53,9 @@ userRouter.post("/signup", signupLimiter, async (req: Request, res: Response) =>
 });
 
 userRouter.post("/signin", loginLimiter, async (req: Request, res: Response) => {
-    const { email, password } = parseInput(signinSchema, req.body);
+    const { email, password, captchaToken } = parseInput(signinSchema, req.body);
+    // Before the account lookup, so the check costs the same for every email.
+    await verifyCaptcha(captchaToken, req.ip, "signin");
 
     const user = await findUserByEmail(email);
     const passwordMatches = await bcrypt.compare(password, user?.hashedPassword ?? DUMMY_HASH);

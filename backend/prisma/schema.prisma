@@ -20,34 +20,43 @@ enum Role {
   user
 }
 
+enum AdminActionType {
+  dismiss_reports
+  remove_post
+}
+
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  name           String   @default("Anonymous")
+  id             String        @id @default(uuid())
+  email          String        @unique
+  name           String        @default("Anonymous")
   hashedPassword String?
   avatar         String?
-  googleId       String?  @unique
-  bio            String   @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
+  googleId       String?       @unique
+  bio            String        @default("Sharing thoughts, experiences, and insights with the world. Because every voice matters and every story counts.")
   likes          Like[]
   posts          Post[]
-  joinedAt       DateTime @default(now())
-  role           Role     @default(user)
+  joinedAt       DateTime      @default(now())
+  role           Role          @default(user)
+  reports        Report[]
+  adminActions   AdminAction[]
 }
 
 model Post {
-  id            String     @id @default(uuid())
-  title         String
-  titleImage    String?
-  content       String
-  status        PostStatus @default(draft)
-  isReported    Boolean    @default(false)
-  numberOfReports Int       @default(0)
-  isAIGenerated Boolean    @default(false)
-  labels        String[]
-  authorId      String
-  date          DateTime   @default(now())
-  likes         Like[]
-  author        User       @relation(fields: [authorId], references: [id])
+  id              String        @id @default(uuid())
+  title           String
+  titleImage      String?
+  content         String
+  status          PostStatus    @default(draft)
+  isReported      Boolean       @default(false)
+  numberOfReports Int           @default(0)
+  isAIGenerated   Boolean       @default(false)
+  labels          String[]
+  authorId        String
+  date            DateTime      @default(now())
+  likes           Like[]
+  reports         Report[]
+  adminActions    AdminAction[]
+  author          User          @relation(fields: [authorId], references: [id])
 
   @@index([authorId, status])
 }
@@ -61,4 +70,32 @@ model Like {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
+}
+
+/// One row per reader per reported post, so one account can't pile up reports.
+model Report {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+/// Audit trail of moderation actions. The app only ever adds rows.
+model AdminAction {
+  id        String          @id @default(cuid())
+  adminId   String
+  action    AdminActionType
+  postId    String?
+  /// The post as it was when the action happened (title, author, report count).
+  details   Json?
+  createdAt DateTime        @default(now())
+  admin     User            @relation(fields: [adminId], references: [id])
+  post      Post?           @relation(fields: [postId], references: [id])
+
+  @@index([createdAt])
 }

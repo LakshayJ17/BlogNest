@@ -8,6 +8,8 @@ import { useAuthStore } from "../store/auth";
 import { Logo } from "./Logo";
 import { Quote } from "./Quote";
 import { Spinner } from "./Spinner";
+import { Captcha } from "./Captcha";
+import { CAPTCHA_ENABLED } from "../config";
 import { buttonClasses, textLink } from "./ui/button";
 import { cn } from "../lib/utils";
 
@@ -36,6 +38,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState<"form" | "google" | null>(null);
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -62,15 +66,22 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
       setError("Your password doesn't meet all the requirements yet.");
       return;
     }
+    if (CAPTCHA_ENABLED && !captchaToken) {
+      setError("Please finish the security check first.");
+      return;
+    }
 
     setBusy("form");
     setError("");
     try {
-      const body = isSignup ? form : { email: form.email, password: form.password };
+      const credentials = isSignup ? form : { email: form.email, password: form.password };
+      const body = CAPTCHA_ENABLED ? { ...credentials, captchaToken } : credentials;
       const { data } = await api.post<{ jwt: string }>(`/user/${type}`, body);
       await completeSignIn(data.jwt);
     } catch (err) {
       setError(getErrorMessage(err));
+      // The server used up this token, so get a new one for the next try.
+      if (CAPTCHA_ENABLED) setCaptchaReset((n) => n + 1);
     } finally {
       setBusy(null);
     }
@@ -231,6 +242,8 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                   </div>
                 )}
               </Field>
+
+              {CAPTCHA_ENABLED && <Captcha action={type} onToken={setCaptchaToken} resetKey={captchaReset} />}
 
               {error && (
                 <div role="alert" className="flex items-start gap-2 rounded-md border border-[#f3d3d3] bg-tag-red-bg px-3 py-2.5 text-sm text-tag-red">

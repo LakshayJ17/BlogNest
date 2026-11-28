@@ -44,6 +44,13 @@ const DEFAULT_ORIGINS = [
     ...(isProduction ? [] : ["http://localhost:5173"]),
 ];
 
+const turnstileSecret = process.env.TURNSTILE_SECRET_KEY || "";
+if (isProduction && !turnstileSecret) {
+    console.warn(
+        "[security] TURNSTILE_SECRET_KEY is not set, so signup and sign-in have no bot check. See backend/.env.example."
+    );
+}
+
 const trustProxyRaw = process.env.TRUST_PROXY ?? "1";
 
 export const env = {
@@ -51,6 +58,8 @@ export const env = {
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
     googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    // Cloudflare Turnstile secret for the signup and sign-in bot check. Empty turns the check off.
+    turnstileSecret,
     corsOrigins: process.env.CORS_ORIGINS
         ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
         : DEFAULT_ORIGINS,
